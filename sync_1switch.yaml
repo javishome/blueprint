@@ -35,7 +35,4 @@ condition:
 action:
 - service: switch.turn_{{ trigger.to_state.state }}
   target:
-    entity_id:  >
-        {% if trigger.entity_id == switch_1 %}
-        {{ switch_2 }}
-        {% endif %}
+    entity_id: 'switch_2'
