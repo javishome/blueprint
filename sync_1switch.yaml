@@ -13,7 +13,7 @@ blueprint:
       selector:
         entity:
           domain: switch
-  source_url: https://gist.github.com/dinhchinh82/60f702cb54d02bbb92b92a377f5ca90b
+  source_url: https://github.com/javishome/blueprint/blob/main/sync_1switch.yaml
 variables:
   switches:
   - !input 'switch_1'
@@ -35,5 +35,7 @@ condition:
 action:
 - service: switch.turn_{{ trigger.to_state.state }}
   target:
-    entity_id: '{{ expand(switches) | selectattr("entity_id", "!=", trigger.entity_id)
-      | map(attribute="entity_id") | list }}'
+    entity_id:  >
+        {% if trigger.entity_id == switch_1 %}
+        {{ switch_2 }}
+        {% endif %}
