@@ -3,52 +3,52 @@ blueprint:
   description: Đồng bộ trạng thái công tắc 2 chiều
   domain: automation
   input:
-    switch_entity1:
+    switch_1:
       name: Switch 1
       selector:
         entity:
           domain: switch
-    switch_entity2:
+    switch_2:
       name: Switch 2
       selector:
         entity:
           domain: switch
 variables:
-  switch_entity1: !input switch_entity1
-  switch_entity2: !input switch_entity2
+  switch_1: !input switch_1
+  switch_2: !input switch_2
 trigger:
   - platform: state
     entity_id: 
-      - !input switch_entity1
-      - !input switch_entity2
+      - !input switch_1
+      - !input switch_2
     from: 'on'
     to: 'off'
   - platform: state
     entity_id: 
-      - !input switch_entity1
-      - !input switch_entity2
+      - !input switch_1
+      - !input switch_2
     from: 'off'
     to: 'on'
 # condition: "{{ trigger.to_state.context.parent_id == none }}"
 action:
   - service_template: >
-      {% if trigger.entity_id == switch_entity1 %}
-        {% if is_state(switch_entity1, "off") and is_state(switch_entity2, "on") %}  
+      {% if trigger.entity_id == switch_1 %}
+        {% if is_state(switch_1, "off") and is_state(switch_2, "on") %}  
         switch.turn_off
-        {% elif (is_state(switch_entity1, "on")) and (is_state(switch_entity2, "off")) %}
+        {% elif (is_state(switch_1, "on")) and (is_state(switch_2, "off")) %}
         switch.turn_on
         {% endif %}
-      {% elif trigger.entity_id == switch_entity2 %}
-        {% if is_state(switch_entity2, "off") and is_state(switch_entity1, "on") %}  
+      {% elif trigger.entity_id == switch_2 %}
+        {% if is_state(switch_2, "off") and is_state(switch_1, "on") %}  
         switch.turn_off
-        {% elif (is_state(switch_entity2, "on")) and (is_state(switch_entity1, "off")) %}
+        {% elif (is_state(switch_2, "on")) and (is_state(switch_1, "off")) %}
         switch.turn_on   
         {% endif %}
       {% endif %} 
     data_template: 
       entity_id: >
-        {% if trigger.entity_id == switch_entity1 %}
-        {{ switch_entity2 }}
-        {% elif trigger.entity_id == switch_entity2 %}
-        {{ switch_entity1 }}
+        {% if trigger.entity_id == switch_1 %}
+        {{ switch_2 }}
+        {% elif trigger.entity_id == switch_2 %}
+        {{ switch_1 }}
         {% endif %}
