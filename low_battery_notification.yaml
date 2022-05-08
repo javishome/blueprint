@@ -1,0 +1,69 @@
+blueprint:
+  name: Kiểm tra các cảm biến zigbee sắp hết pin và gửi thông báo.
+  description: Định kỳ kiểm tra các thiết bị dùng pin và gửi cảnh báo nếu mức pin của thiết bị xuống dưới ngưỡng thiết lập. 
+  domain: automation
+  input:
+    threshold:
+      name: Ngưỡng mức pin cảnh báo
+      description: Mức pin của thiết bị thấp hơn ngưỡng cảnh báo được xem là yếu pin và sẽ dùng để cảnh báo yếu pin.
+      default: 20
+      selector:
+        number:
+          min: 5.0
+          max: 100.0
+          unit_of_measurement: '%'
+          mode: slider
+          step: 5.0
+    time:
+      name: Thời gian kiểm tra
+      description: Thời gian kiểm tra mức pin so với ngưỡng thiết lập
+      default: '10:00:00'
+      selector:
+        time: {}
+    day:
+      name: Chọn tần suất lặp lại kiểm tra
+      description: ' Chọn (0): chạy hàng ngày. Chọn 1: Thứ 2,.., 7: Chủ nhật.'
+      default: 0
+      selector:
+        number:
+          min: 0.0
+          max: 7.0
+          mode: slider
+          step: 1.0
+    exclude:
+      name: Loại trừ các cảm biến không muốn kiểm tra
+      description: Chọn các cảm biến muốn loại trừ khỏi danh sách kiểm tra.
+      default:
+        entity_id: []
+      selector:
+        target:
+          entity:
+            device_class: battery
+    actions:
+      name: Hành động thực hiện
+      description: Gửi thông báo. Danh sách các cảm biến sẽ được thay thế bởi {{sensors}}.
+      selector:
+        action: {}
+  source_url: https://gist.github.com/sbyx/1f6f434f0903b872b84c4302637d0890
+variables:
+  day: !input 'day'
+  threshold: !input 'threshold'
+  exclude: !input 'exclude'
+  sensors: "{% set result = namespace(sensors=[]) %} {% for state in states.sensor\
+    \ | selectattr('attributes.device_class', '==', 'battery') %}\n  {% if 0 <= state.state\
+    \ | int(-1) < threshold | int and not state.entity_id in exclude.entity_id %}\n\
+    \    {% set result.sensors = result.sensors + [state.name ~ ' (' ~ state.state\
+    \ ~ ' %)'] %}\n  {% endif %}\n{% endfor %} {% for state in states.binary_sensor\
+    \ | selectattr('attributes.device_class', '==', 'battery') | selectattr('state',\
+    \ '==', 'on') %}\n  {% if not state.entity_id in exclude.entity_id %}\n    {%\
+    \ set result.sensors = result.sensors + [state.name] %}\n  {% endif %}\n{% endfor\
+    \ %} {{result.sensors|join(', ')}}"
+trigger:
+- platform: time
+  at: !input 'time'
+condition:
+- '{{ sensors != '''' and (day | int == 0 or day | int == now().isoweekday()) }}'
+action:
+- choose: []
+  default: !input 'actions'
+mode: single
