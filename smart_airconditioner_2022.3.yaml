@@ -1,0 +1,172 @@
+blueprint:
+  name: Tự động bật tắt điều hoà theo trạng thái cửa (dùng cho HA <= 2022.3)
+  description: 'Nếu điều hoà đang bật, cửa mở thì điều hoà sẽ tắt, sau đó nếu đóng lại điều hoà sẽ bật lại chế độ cũ'
+  domain: automation
+  input:
+    window_entity:
+      name: Window Sensor
+      description: Cảm biến cửa dùng để điều khiển điều hoà tự động. Nếu có nhiều cửa hãy tạo group cảm biến cửa.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: door
+          # multiple: false
+    minimum_open_time:
+      name: Miniumum open time
+      description: Nếu mở cửa trong khoảng thời gian nhỏ hơn giá trị này thì sẽ không kích hoạt tự động.
+      default: 12
+      selector:
+        number:
+          min: 0.0
+          max: 120.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    climate_target:
+      name: Climate Device
+      description: Điều hoà sẽ bật tắt tự động.
+      selector:
+        entity:
+          domain: climate
+          # multiple: false
+  source_url: https://community.home-assistant.io/t/window-open-climate-off/257293
+mode: single
+trigger:
+- platform: state
+  entity_id: !input 'window_entity'
+  to: 'on'
+  for: !input 'minimum_open_time'
+condition:
+- condition: not
+  conditions:
+  - condition: state
+    entity_id: !input 'climate_target'
+    state: 'off'
+action:
+- choose:
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: cool
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: !input 'climate_target'
+      data:
+        hvac_mode: cool
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: heat_cool
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: !input 'climate_target'
+      data:
+        hvac_mode: heat_cool
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: heat
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      data:
+        hvac_mode: heat
+      target:
+        entity_id: !input 'climate_target'
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: automatic
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      data:
+        hvac_mode: automatic
+      target:
+        entity_id: !input 'climate_target'
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: auto
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      data:
+        hvac_mode: auto
+      target:
+        entity_id: !input 'climate_target'
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: dry
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      data:
+        hvac_mode: dry
+      target:
+        entity_id: !input 'climate_target'
+  - conditions:
+    - condition: state
+      entity_id: !input 'climate_target'
+      state: fan_only
+    sequence:
+    - service: climate.turn_off
+      target:
+        entity_id: !input 'climate_target'
+    - wait_for_trigger:
+      - platform: state
+        entity_id: !input 'window_entity'
+        to: 'off'
+      continue_on_timeout: false
+    - service: climate.set_hvac_mode
+      data:
+        hvac_mode: fan_only
+      target:
+        entity_id: !input 'climate_target'
