@@ -1,0 +1,9 @@
+- name: switch auto car
+  payload_off: 'off'
+  payload_on: 'on'
+  platform: mqtt
+  state_off: 'off'
+  state_on: 'on'
+  state_topic: zigbee2mqtt/0x00124b00246df48b
+  value_template: "{{ value_json.available }}" 
+  command_topic: set/state/autocar
