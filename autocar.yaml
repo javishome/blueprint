@@ -1,6 +1,6 @@
 blueprint:
   name: Định vị ô tô thông minh
-  description: Tự động phát hiện ô tô về nhà và mở cửa. Cần tạo 1 "công tắc ảo" theo link https://github.com/javishome/blueprint/blob/main/virtual_switch1.yaml. Module định vị ô tô là module định vị ô tô đã mua từ JAVIS
+  description: Tự động phát hiện ô tô về nhà và mở cửa. Module định vị ô tô là module định vị ô tô đã mua từ JAVIS
   domain: automation
   input:
     switch_entity1:
