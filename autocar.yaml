@@ -5,13 +5,13 @@ blueprint:
   input:
     switch_entity1:
       name: công tắc ảo
-      description: cần tạo 1 công tắc ảo theo link https://github.com/javishome/blueprint/edit/main/virtual_switch1.yaml
+      # description: cần tạo 1 công tắc ảo theo link https://github.com/javishome/blueprint/edit/main/virtual_switch1.yaml
       selector:
         entity:
           domain: switch
     switch_entity2:
       name: module định vị ô tô
-      description: chọn module định vị ô tô đã mua từ JAVIS
+      # description: chọn module định vị ô tô đã mua từ JAVIS
       selector:
         entity:
           domain: switch
