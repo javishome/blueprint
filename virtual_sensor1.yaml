@@ -1,6 +1,0 @@
-- 
-  platform: "mqtt" 
-  name: "Javis sensor auto car"
-  state_topic: "zigbee2mqtt/0x00124b00246df48b"
-  ##0x00124b00246df48b là mac của module auto car
-  value_template: "{{ value_json.available }}"
