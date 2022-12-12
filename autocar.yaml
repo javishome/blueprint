@@ -7,7 +7,7 @@ blueprint:
       name: sensor ảo
       selector:
         entity:
-          domain: sensor
+          domain: binary_sensor
     switch_entity2:
       name: module định vị ô tô
       selector:
