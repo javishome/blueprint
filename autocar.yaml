@@ -7,7 +7,7 @@ blueprint:
       name: sensor ảo
       selector:
         entity:
-          domain: binary_sensor
+          domain: sensor
     switch_entity2:
       name: module định vị ô tô
       selector:
@@ -22,7 +22,9 @@ variables:
 condition: []
 action:
   - service_template: >
-      {% if (is_state(sensor_entity1, 'on')) %} mqtt.publish {% endif %}
+      {% if (is_state(sensor_entity1, 'on')) %}  
+        mqtt.publish
+      {% endif %}
     data:
       topic_template: "zigbee2mqtt/{{ switch_entity2.split('.')[1] }}/get"
-      payload: '{ "state" : ''}'
+      payload: "{\"state\": \"\"}"
