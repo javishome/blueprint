@@ -25,4 +25,4 @@ action:
       {% if (is_state(sensor_entity1, 'on')) %} mqtt.publish {% endif %}
     data:
       topic_template: "zigbee2mqtt/{{ switch_entity2.split('.')[1] }}/get"
-      payload: "{\"state\": \"\"}"
+      payload: '{ "state": ""}'
