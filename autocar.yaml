@@ -53,3 +53,4 @@ action:
       - choose: []
         default: []
 mode: single 
+max_exceeded: silent
