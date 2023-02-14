@@ -1,0 +1,78 @@
+blueprint:
+  name: tự bật tắt nóng lạnh khi có người
+  description: 'có người vào vệ sinh tắt nóng lạnh, đi ra thì bật lại nóng lạnh'
+  domain: automation
+  input:
+    motion_entity:
+      name: Cảm biến chuyển động
+      description: The window sensor that controls the climate entity. If you have
+        more window sensors please make a group sensor.
+      selector:
+        entity:
+          domain: binary_sensor
+          # device_class: motion
+          multiple: false
+    minimum_open_time:
+      name: Miniumum open time
+      description: Thời gian tính bằng giây khi sau khi có chuyển động thì tắt nóng lạnh
+      default: 0
+      selector:
+        number:
+          min: 0.0
+          max: 120.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    minimum_close_time:
+      name: Miniumum close time
+      description: Thời gian tính bằng giây sau khi hết chuyển động thì bật nóng lạnh trở lại
+      default: 12
+      selector:
+        number:
+          min: 0.0
+          max: 300.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    switch_target:
+      name: Boiler Switch Device
+      description: Công tắc nóng lạnh trong phòng vệ sinh
+      selector:
+        entity:
+          domain: switch
+          multiple: false
+  source_url: https://raw.githubusercontent.com/javishome/blueprint/main/auto_boiler.yaml 
+# variables:
+#   open_action: !input open_action
+#   close_action: !input close_action
+trigger:
+  - platform: state
+    entity_id: !input motion_entity
+    to: 'on'
+    for: !input minimum_open_time
+  condition:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: !input switch_target
+      state: 'off'
+action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: !input switch_target
+        state: "on"
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: !input switch_target
+      - wait_for_trigger:
+        - platform: state
+          entity_id: !input motion_entity
+          to: 'off'
+        continue_on_timeout: false
+      - delay: !input minimum_close_time
+      - service: switch.turn_on
+        target:
+          entity_id: !input switch_target
+mode: single
