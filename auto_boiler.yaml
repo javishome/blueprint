@@ -26,7 +26,7 @@ blueprint:
     minimum_close_time:
       name: Miniumum close time
       description: Thời gian tính bằng giây sau khi hết chuyển động thì bật nóng lạnh trở lại
-      default: 12
+      default: 0
       selector:
         number:
           min: 0.0
