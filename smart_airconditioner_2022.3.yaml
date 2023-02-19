@@ -1,5 +1,5 @@
 blueprint:
-  name: Tự động bật tắt điều hoà theo trạng thái cửa
+  name: Tự động bật tắt điều hoà theo trạng thái cửa (dùng cho HA < 2022.4)
   description: 'Nếu điều hoà đang bật, cửa mở thì điều hoà sẽ tắt, sau đó nếu đóng lại điều hoà sẽ bật lại chế độ cũ'
   domain: automation
   input:
