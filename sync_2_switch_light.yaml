@@ -1,0 +1,100 @@
+blueprint:
+  name: Đồng bộ 2 chiều công tắc và đèn
+  description: Đồng bộ trạng thái công tắc và đèn, có thể giữa 2 công tắc hoặc 1 công tắc 1 đèn hoặc giữa 2 đèn
+  domain: automation
+  input:
+    entity_1:
+      name: Switch/Light 1
+      selector:
+        entity:
+          domain:
+            - light
+            - switch
+          multiple: false
+    entity_2:
+      name: Switch/Light 2
+      selector:
+        entity:
+          domain:
+            - light
+            - switch
+          multiple: false
+  source_url: https://raw.githubusercontent.com/javishome/blueprint/main/sync_2_switch_light.yaml
+variables:
+  entity_1: !input entity_1
+  entity_2: !input entity_2
+trigger:
+  - platform: state
+    entity_id:
+      - !input entity_1
+    from: "on"
+    to: "off"
+    id: check_off_1
+  - platform: state
+    entity_id:
+      - !input entity_2
+    from: "on"
+    to: "off"
+    id: check_off_2
+  - platform: state
+    entity_id:
+      - !input entity_1
+    from: "off"
+    to: "on"
+    id: check_on_1
+  - platform: state
+    entity_id:
+      - !input entity_2
+    from: "off"
+    to: "on"
+    id: check_on_2
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: check_on_1
+          - condition: state
+            entity_id: !input entity_2
+            state: "off"
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: !input entity_2
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: check_on_2
+          - condition: state
+            entity_id: !input entity_1
+            state: "off"
+        sequence:
+          - service: homeassistant.turn_on
+            target:
+              entity_id: !input entity_1
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: check_off_1
+          - condition: state
+            entity_id: !input entity_2
+            state: "on"
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: !input entity_2
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: check_off_2
+          - condition: state
+            entity_id: !input entity_1
+            state: "on"
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: !input entity_1
+    default:
+      - choose: []
+        default: []
+mode: single
+max_exceeded: silent
