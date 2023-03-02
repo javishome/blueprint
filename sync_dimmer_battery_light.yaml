@@ -1,0 +1,74 @@
+blueprint:
+  name: Đồng bộ dimmer và đèn thông minh
+  description: Dùng dimmer vặn tròn dùng pin để điều khiển đèn thông minh.
+  domain: automation
+  input:
+    entity_1:
+      name: Chọn dimmer
+      selector:
+        entity:
+          domain:
+            - sensor
+          multiple: false
+    entity_2:
+      name: Chọn đèn
+      selector:
+        entity:
+          domain:
+            - light
+          multiple: false
+  source_url: https://raw.githubusercontent.com/javishome/blueprint/main/sync_dimmer_battery_light.yaml 
+variables:
+  entity_1: !input entity_1
+  entity_2: !input entity_2
+trigger:
+  - platform: state
+    entity_id:
+    - !input entity_1
+    to: brightness_step_down
+    attribute: action
+    id: dimmer_brightness_step_down
+  - platform: state
+    entity_id:
+    - !input entity_1
+    to: brightness_step_up
+    attribute: action
+    id: dimmer_brightness_step_up
+  - platform: state
+    entity_id:
+    - !input entity_1
+    to: toggle
+    attribute: action
+    id: dimmer_toggle
+action:
+  - choose:
+    - conditions: 
+        - condition: trigger
+          id: dimmer_brightness_step_down
+      sequence:
+      - service: light.turn_on
+        data:
+          brightness_step_pct: -15
+        target:
+          entity_id: !input entity_2
+    - choose:
+    - conditions: 
+        - condition: trigger
+          id: dimmer_brightness_step_up
+      sequence:
+      - service: light.turn_on
+        data:
+          brightness_step_pct: 15
+        target:
+          entity_id: !input entity_2
+  - choose:
+    - conditions: 
+        - condition: trigger
+          id: dimmer_toggle
+      sequence:
+      - service: light.toggle
+        data: {}
+        target:
+          entity_id: entity_2
+mode: single 
+max_exceeded: silent
