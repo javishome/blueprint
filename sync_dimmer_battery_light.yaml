@@ -67,8 +67,7 @@ action:
           id: dimmer_toggle
       sequence:
       - service: light.toggle
-        data: {}
         target:
-          entity_id: entity_2
+          entity_id: !input entity_2
 mode: single 
 max_exceeded: silent
