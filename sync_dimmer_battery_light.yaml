@@ -51,7 +51,7 @@ action:
           brightness_step_pct: -15
         target:
           entity_id: !input entity_2
-    - choose:
+  - choose:
     - conditions: 
         - condition: trigger
           id: dimmer_brightness_step_up
