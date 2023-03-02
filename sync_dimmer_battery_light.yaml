@@ -1,6 +1,6 @@
 blueprint:
   name: Đồng bộ dimmer và đèn thông minh
-  description: Dùng dimmer vặn tròn dùng pin để điều khiển đèn thông minh.
+  description: Dùng dimmer vặn tròn dùng pin để điều khiển đèn thông minh. Lưu ý cần set operation_mode của nút dim về chế độ "command"
   domain: automation
   input:
     entity_1:
