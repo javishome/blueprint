@@ -1,0 +1,116 @@
+blueprint:
+  name: Tự động điều khiển nhà theo cử chỉ
+  description: kích hoat tự động hoá khi dùng cửa chỉ bàn tay với camera AI. Cần có camera AI G3 và 1 module Aqara zigbee dimmer.
+  domain: automation
+  input:
+    entity_1:
+      name: Light
+      selector:
+        entity:
+          domain:
+          - light
+          multiple: false
+    script_1:
+      name: Automation for Four
+      default: None
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_2:
+      name: Automation for V Sign
+      default: None
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_3:
+      name: Automation for High Five
+      default: None
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_4:
+      name: Automation for Finger Gun
+      default: None
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_5:
+      name: Automation for OK
+      default: None
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+trigger_variables:
+  entity_1: !input entity_1
+  script_1: !input script_1
+  script_2: !input script_2
+  script_3: !input script_3
+  script_4: !input script_4
+  script_5: !input script_5
+trigger:
+- platform: template
+  value_template: >-
+    {{ (state_attr( entity_1, "brightness")|float == 2.55) }}
+  id: check_four
+- platform: template
+  value_template: >- 
+    {{ (state_attr( entity_1, "brightness")|float == 5.10) }}
+  id: check_v
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 7.65 }}
+  id: check_five
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 10.2 }}
+  id: check_gun
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 12.75 }}
+  id: check_ok
+action:
+- choose:
+  - conditions:
+    - condition: trigger
+      id: check_four
+    sequence:
+    - service: !input script_1
+- choose:
+  - conditions:
+    - condition: trigger
+      id: check_v
+    sequence:
+    - service: !input script_2
+- choose:
+  - conditions:
+    - condition: trigger
+      id: check_five
+    sequence:
+    - service: !input script_3
+- choose:
+  - conditions:
+    - condition: trigger
+      id: check_gun
+    sequence:
+    - service: !input script_4
+- choose:
+  - conditions:
+    - condition: trigger
+      id: check_ok
+    sequence:
+    - service: !input script_5
+  default:
+  - choose: []
+    default: []
+mode: single
+max_exceeded: silent
