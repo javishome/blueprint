@@ -5,24 +5,22 @@ blueprint:
   domain: automation
   input:
     target_switch_1:
-      name: Đèn, quạt nhà vệ sinh
-      description: Chọn công tắc trong phòng vệ sinh
+      name: Đèn, công tắc, quạt vệ sinh
+      description: Chọn đèn, công tắc hoặc quạt thông gió trong phòng vệ sinh
       selector:
         entity:
+          domain:
+           - switch
+           - light
+           - fan
           multiple: true
-    # target_switch_2:
-    #   name: Đèn
-    #   description: Chọn đèn trong phòng vệ sinh
-    #   selector:
-    #     entity:
-    #       domain: light
-    #       multiple: true
     trigger_motion_sensor:
       name: Cảm biến chuyển động
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
       selector:
         entity:
           domain: binary_sensor
+          device_class: occupancy
           multiple: false
     trigger_door_sensor:
       name: Cảm biến cửa
@@ -30,6 +28,7 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
+          device_class: door
           multiple: false
     door_open_wait:
       name: Thời gian chờ khi mở cửa rồi mới tắt đèn
@@ -51,6 +50,17 @@ blueprint:
           min: 0.0
           max: 300.0
           unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+    no_motion_door_close_wait:
+      name: Thời gian chờ tắt đèn khi cửa đóng mà không có chuyển động
+      description: Khi cửa đang đóng và không có chuyển động thì sẽ tắt sau 1 khoảng thời gian
+      default: 10
+      selector:
+        number:
+          min: 1.0
+          max: 60.0
+          unit_of_measurement: minutes
           step: 1.0
           mode: slider
   source_url: https://raw.githubusercontent.com/javishome/blueprint/main/blueprint_bathroom_auto.yaml
