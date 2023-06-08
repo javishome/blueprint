@@ -1,50 +1,60 @@
 blueprint:
   name: Tự động nhà vệ sinh
-  description: Tự động bật tắt đèn vệ sinh dựa trên 1 cảm biến cửa và 1 cảm biến chuyển động
+  description: Tự động bật tắt đèn vệ sinh dựa trên 1 cảm biến cửa và 1 cảm biến chuyển
+    động
   domain: automation
   input:
     target_switch_1:
       name: Công tắc
-      description: Chọn công tắc 1 trong phòng vệ sinh
+      description: Chọn công tắc trong phòng vệ sinh
       selector:
-          entity:
-            domain: switch
+        entity:
+          domain: switch
+          multiple: true
     target_switch_2:
-      name: Công tắc
-      description: Chọn công tắc 2 trong phòng vệ sinh
+      name: Đèn
+      description: Chọn đèn trong phòng vệ sinh
       selector:
-          entity:
-            domain: switch
+        entity:
+          domain: light
+          multiple: true
     trigger_motion_sensor:
       name: Cảm biến chuyển động
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
       selector:
-          entity:
-            domain: binary_sensor
+        entity:
+          domain: binary_sensor
+          multiple: false
     trigger_door_sensor:
       name: Cảm biến cửa
       description: Chọn 1 cảm biến cửa trong phòng vệ sinh
       selector:
-          entity:
-            domain: binary_sensor
+        entity:
+          domain: binary_sensor
+          multiple: false
     door_open_wait:
       name: Thời gian chờ khi mở cửa rồi mới tắt đèn
       description: Thời gian chờ khi mở cửa rồi mới tắt đèn
       default: 2
       selector:
         number:
-          min: 0
-          max: 120
+          min: 0.0
+          max: 120.0
           unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
     no_motion_wait:
       name: Thời gian tắt đèn khi cửa mở mà không có chuyển động
       description: Thời gian tắt đèn khi cửa mở mà không có chuyển động
       default: 120
       selector:
         number:
-          min: 0
-          max: 300  
+          min: 0.0
+          max: 300.0
           unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+  source_url: https://raw.githubusercontent.com/javishome/blueprint/main/blueprint_bathroom_auto.yaml
 variables:
   trigger_motion_sensor: !input trigger_motion_sensor
   trigger_door_sensor: !input trigger_door_sensor
@@ -52,41 +62,35 @@ variables:
   target_switch_1: !input target_switch_1
   target_switch_2: !input target_switch_2
 trigger:
-  - platform: state
-    entity_id: !input trigger_motion_sensor
-    from: "off"
-    to: "on"
-  - platform: state
-    entity_id: !input trigger_motion_sensor
-    from: "on"
-    to: "off"
-  - platform: state
-    entity_id: !input trigger_door_sensor
-    from: "off"
-    to: "on"
-  - platform: state
-    entity_id: !input trigger_door_sensor
-    from: "on"
-    to: "off"
-    for: !input no_motion_wait
+- platform: state
+  entity_id: !input trigger_motion_sensor
+  from: 'off'
+  to: 'on'
+- platform: state
+  entity_id: !input trigger_motion_sensor
+  from: 'on'
+  to: 'off'
+- platform: state
+  entity_id: !input trigger_door_sensor
+  from: 'off'
+  to: 'on'
+- platform: state
+  entity_id: !input trigger_door_sensor
+  from: 'on'
+  to: 'off'
+  for: !input no_motion_wait
 action:
-  - delay: 
-      seconds: '{{ !input door_open_wait | int }}'
-  - service_template: >
-      {% if trigger.entity_id == trigger_door_sensor %}
-        {% if is_state(trigger_door_sensor, "on") and is_state(target_switch_1, "off") %}  
-        switch.turn_on
-        {% elif (is_state(trigger_door_sensor, "on")) and (is_state(target_switch_1, "on")) %}
-        switch.turn_off
-        {% endif %}
-      {% elif trigger.entity_id == trigger_motion_sensor %}
-        {% if is_state(trigger_motion_sensor, "off") and is_state(trigger_door_sensor, "on") %}  
-        switch.turn_off
-        {% elif (is_state(trigger_motion_sensor, "on")) and (is_state(target_switch_1, "off")) %}
-        switch.turn_on   
-        {% endif %}
-      {% endif %} 
-    data_template: 
-      entity_id: 
-        - !input target_switch_1
-        - !input target_switch_2
+- delay:
+    seconds: '{{ !input door_open_wait | int }}'
+- service_template: "{% if trigger.entity_id == trigger_door_sensor %}\n  {% if is_state(trigger_door_sensor,
+    \"on\") and is_state(target_switch_1, \"off\") %}  \n  switch.turn_on\n  {% elif
+    (is_state(trigger_door_sensor, \"on\")) and (is_state(target_switch_1, \"on\"))
+    %}\n  switch.turn_off\n  {% endif %}\n{% elif trigger.entity_id == trigger_motion_sensor
+    %}\n  {% if is_state(trigger_motion_sensor, \"off\") and is_state(trigger_door_sensor,
+    \"on\") %}  \n  switch.turn_off\n  {% elif (is_state(trigger_motion_sensor, \"on\"))
+    and (is_state(target_switch_1, \"off\")) %}\n  switch.turn_on   \n  {% endif %}\n{%
+    endif %} \n"
+  data_template:
+    entity_id:
+    - !input target_switch_1
+    # - !input target_switch_2
