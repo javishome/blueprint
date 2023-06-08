@@ -55,12 +55,12 @@ blueprint:
     no_motion_door_close_wait:
       name: Thời gian chờ tắt đèn khi cửa đóng mà không có chuyển động
       description: Khi cửa đang đóng và không có chuyển động thì sẽ tắt sau 1 khoảng thời gian
-      default: 10
+      default: 600
       selector:
         number:
           min: 1.0
-          max: 60.0
-          unit_of_measurement: minutes
+          max: 1800
+          unit_of_measurement: seconds
           step: 1.0
           mode: slider
     from_time:
