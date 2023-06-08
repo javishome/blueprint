@@ -59,7 +59,7 @@ variables:
   trigger_door_sensor: !input trigger_door_sensor
   door_open_wait: !input door_open_wait
   target_switch_1: !input target_switch_1
-  target_switch_2: !input target_switch_2
+  # target_switch_2: !input target_switch_2
 trigger:
 - platform: state
   entity_id: !input trigger_motion_sensor
