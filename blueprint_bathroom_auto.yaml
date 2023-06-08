@@ -63,6 +63,18 @@ blueprint:
           unit_of_measurement: minutes
           step: 1.0
           mode: slider
+    from_time:
+      name: Thời gian bắt đầu hiệu lực
+      description: Bắt đầu khoảng thời gian có hiệu lực
+      default: "00:00:00"
+      selector:
+        time:
+    to_time:
+      name: Thời gian kết thúc hiệu lực
+      description: Bắt đầu khoảng thời gian có hiệu lực
+      default: "23:59:59"
+      selector:
+        time:
   source_url: https://raw.githubusercontent.com/javishome/blueprint/main/blueprint_bathroom_auto.yaml
 variables:
   trigger_motion_sensor: !input trigger_motion_sensor
