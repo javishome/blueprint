@@ -5,11 +5,10 @@ blueprint:
   domain: automation
   input:
     target_switch_1:
-      name: Công tắc
-      description: Chọn công tắc hoặc quạt hoặc đèn trong phòng vệ sinh
+      name: Đèn, quạt nhà vệ sinh
+      description: Chọn công tắc trong phòng vệ sinh
       selector:
         entity:
-          domain: switch, light
           multiple: true
     # target_switch_2:
     #   name: Đèn
