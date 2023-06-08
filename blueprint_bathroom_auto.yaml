@@ -20,7 +20,7 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
-          device_class: occupancy
+          device_class: motion
           multiple: false
     trigger_door_sensor:
       name: Cảm biến cửa
@@ -63,24 +63,15 @@ blueprint:
           unit_of_measurement: minutes
           step: 1.0
           mode: slider
-    from_time:
-      name: Thời gian bắt đầu hiệu lực
-      description: Bắt đầu khoảng thời gian có hiệu lực
-      default: "00:00:00"
-      selector:
-        time:
-    to_time:
-      name: Thời gian kết thúc hiệu lực
-      description: Bắt đầu khoảng thời gian có hiệu lực
-      default: "23:59:59"
-      selector:
-        time:
   source_url: https://raw.githubusercontent.com/javishome/blueprint/main/blueprint_bathroom_auto.yaml
 variables:
   trigger_motion_sensor: !input trigger_motion_sensor
   trigger_door_sensor: !input trigger_door_sensor
   door_open_wait: !input door_open_wait
   target_switch_1: !input target_switch_1
+  no_motion_door_close_wait: !input no_motion_door_close_wait
+  no_motion_wait: !input no_motion_wait
+  
   # target_switch_2: !input target_switch_2
 trigger:
 - platform: state
@@ -101,17 +92,23 @@ trigger:
   to: 'off'
   for: !input no_motion_wait
 action:
-- delay:
-    seconds: '{{ !input door_open_wait | int }}'
-- service_template: "{% if trigger.entity_id == trigger_door_sensor %}\n  {% if is_state(trigger_door_sensor,
-    \"on\") and is_state(target_switch_1, \"off\") %}  \n  switch.turn_on\n  {% elif
-    (is_state(trigger_door_sensor, \"on\")) and (is_state(target_switch_1, \"on\"))
-    %}\n  switch.turn_off\n  {% endif %}\n{% elif trigger.entity_id == trigger_motion_sensor
-    %}\n  {% if is_state(trigger_motion_sensor, \"off\") and is_state(trigger_door_sensor,
-    \"on\") %}  \n  switch.turn_off\n  {% elif (is_state(trigger_motion_sensor, \"on\"))
-    and (is_state(target_switch_1, \"off\")) %}\n  switch.turn_on   \n  {% endif %}\n{%
-    endif %} \n"
+# - delay:
+#     seconds: '{{ !input door_open_wait | int }}'
+- service_template: >    
+      {% if trigger.entity_id == trigger_door_sensor %}
+        {% if is_state(trigger_door_sensor, "on") and is_state(target_switch_1, "off") %}  
+        switch.turn_on
+        {% elif (is_state(trigger_door_sensor, "on")) and (is_state(target_switch_1, "on")) %}
+        switch.turn_off
+        {% endif %}
+      {% elif trigger.entity_id == trigger_motion_sensor %}
+        {% if is_state(trigger_motion_sensor, "off") and is_state(trigger_door_sensor, "on") %}  
+        switch.turn_off
+        {% elif (is_state(trigger_motion_sensor, "on")) and (is_state(target_switch_1, "off")) %}
+        switch.turn_on   
+        {% endif %}
+      {% endif %} 
   data_template:
     entity_id:
-    - !input target_switch_1
+    - switch.none
     # - !input target_switch_2
