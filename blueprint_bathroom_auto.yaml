@@ -6,18 +6,18 @@ blueprint:
   input:
     target_switch_1:
       name: Công tắc
-      description: Chọn công tắc trong phòng vệ sinh
+      description: Chọn công tắc hoặc quạt hoặc đèn trong phòng vệ sinh
       selector:
         entity:
-          domain: switch
+          domain: switch, light
           multiple: true
-    target_switch_2:
-      name: Đèn
-      description: Chọn đèn trong phòng vệ sinh
-      selector:
-        entity:
-          domain: light
-          multiple: true
+    # target_switch_2:
+    #   name: Đèn
+    #   description: Chọn đèn trong phòng vệ sinh
+    #   selector:
+    #     entity:
+    #       domain: light
+    #       multiple: true
     trigger_motion_sensor:
       name: Cảm biến chuyển động
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
