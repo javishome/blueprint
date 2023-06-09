@@ -117,8 +117,7 @@ trigger:
   entity_id: !input trigger_door_sensor
   from: 'on'
   to: 'off'
-  for: 
-    minutes: !input no_motion_door_close_wait
+  for: !input no_motion_door_close_wait
   id: door_close_wait
 action:
 - choose:
