@@ -15,7 +15,7 @@ blueprint:
            - fan
           multiple: true
     trigger_motion_sensor:
-      name: Cảm biến chuyển động
+      name: Cảm biến chuyển động 
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
       selector:
         entity:
@@ -83,44 +83,104 @@ variables:
   target_switch_1: !input target_switch_1
   no_motion_door_close_wait: !input no_motion_door_close_wait
   no_motion_wait: !input no_motion_wait
+  from_time: !input from_time
+  to_time: !input to_time
   
-  # target_switch_2: !input target_switch_2
 trigger:
 - platform: state
   entity_id: !input trigger_motion_sensor
   from: 'off'
   to: 'on'
+  id: motion_on
 - platform: state
   entity_id: !input trigger_motion_sensor
   from: 'on'
   to: 'off'
+  id: motion_off
+- platform: state
+  entity_id: !input trigger_motion_sensor
+  from: 'on'
+  to: 'off'
+  for: !input no_motion_wait
+  id: no_motion_wait
 - platform: state
   entity_id: !input trigger_door_sensor
   from: 'off'
   to: 'on'
+  id: door_on
 - platform: state
   entity_id: !input trigger_door_sensor
   from: 'on'
   to: 'off'
-  for: !input no_motion_wait
+  id: door_off
+- platform: state
+  entity_id: !input trigger_door_sensor
+  from: 'on'
+  to: 'off'
+  for: 
+    minutes: !input no_motion_door_close_wait
+  id: door_close_wait
 action:
-# - delay:
-#     seconds: '{{ !input door_open_wait | int }}'
-- service_template: >    
-      {% if trigger.entity_id == trigger_door_sensor %}
-        {% if is_state(trigger_door_sensor, "on") and is_state(target_switch_1, "off") %}  
-        switch.turn_on
-        {% elif (is_state(trigger_door_sensor, "on")) and (is_state(target_switch_1, "on")) %}
-        switch.turn_off
-        {% endif %}
-      {% elif trigger.entity_id == trigger_motion_sensor %}
-        {% if is_state(trigger_motion_sensor, "off") and is_state(trigger_door_sensor, "on") %}  
-        switch.turn_off
-        {% elif (is_state(trigger_motion_sensor, "on")) and (is_state(target_switch_1, "off")) %}
-        switch.turn_on   
-        {% endif %}
-      {% endif %} 
-  data_template:
-    entity_id:
-    - switch.none
-    # - !input target_switch_2
+- choose:
+  - conditions:
+    - condition: trigger
+      id: motion_on
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+    - service: homeassistant.turn_on
+      target:
+        entity_id: !input target_switch_1
+- choose:
+  - conditions:
+    - condition: trigger
+      id: no_motion_wait
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+    - service: homeassistant.turn_off
+      target:
+        entity_id: !input target_switch_1
+- choose:
+  - conditions:
+    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
+    - condition: trigger
+      id: door_close_wait
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    - condition: state
+      entity_id: !input trigger_motion_sensor
+      state: 'off'
+    sequence:
+    - service: homeassistant.turn_off
+      target:
+        entity_id: !input target_switch_1
+- choose: 
+  - conditions:
+    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count == 0 }}"
+    - condition: trigger
+      id: door_on
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+      - service: homeassistant.turn_on
+        target:
+          entity_id: !input target_switch_1
+- choose: 
+  - conditions:
+    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
+    - condition: trigger
+      id: door_on
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+      - delay: 
+          seconds: '{{ door_open_wait | int(0) }}'
+      - service: homeassistant.turn_off
+        target:
+          entity_id: !input target_switch_1
