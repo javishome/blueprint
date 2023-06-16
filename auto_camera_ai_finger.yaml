@@ -12,7 +12,7 @@ blueprint:
           multiple: false
     script_1:
       name: Automation for Four
-      default: None
+      default: script.none
       selector:
         entity:
           domain:
@@ -20,7 +20,7 @@ blueprint:
           multiple: false
     script_2:
       name: Automation for V Sign
-      default: None
+      default: script.none
       selector:
         entity:
           domain:
@@ -28,7 +28,7 @@ blueprint:
           multiple: false
     script_3:
       name: Automation for High Five
-      default: None
+      default: script.none
       selector:
         entity:
           domain:
@@ -36,7 +36,7 @@ blueprint:
           multiple: false
     script_4:
       name: Automation for Finger Gun
-      default: None
+      default: script.none
       selector:
         entity:
           domain:
@@ -44,7 +44,55 @@ blueprint:
           multiple: false
     script_5:
       name: Automation for OK
-      default: None
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_6:
+      name: Automation âm thanh bất thường
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_7:
+      name: Automation phát hiện chuyển động
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_8:
+      name: Automation phát hiện người lạ
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_9:
+      name: Automation phát hiện người quen
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_10:
+      name: Automation phát hiện người
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    script_11:
+      name: Automation phát hiện chó mèo
+      default: script.none
       selector:
         entity:
           domain:
@@ -57,6 +105,12 @@ trigger_variables:
   script_3: !input script_3
   script_4: !input script_4
   script_5: !input script_5
+  script_6: !input script_6
+  script_7: !input script_7
+  script_8: !input script_8
+  script_9: !input script_9
+  script_10: !input script_10
+  script_11: !input script_11
 trigger:
 - platform: template
   value_template: >-
@@ -78,37 +132,108 @@ trigger:
   value_template: >-
     {{ state_attr(entity_1, 'brightness')|float == 12.75 }}
   id: check_ok
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 15.3 }}
+  id: check_sound
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 17.85 }}
+  id: check_action
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 20.4 }}
+  id: check_stranger
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 22.95 }}
+  id: check_acquaintance
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 25.5 }}
+  id: check_people
+- platform: template
+  value_template: >-
+    {{ state_attr(entity_1, 'brightness')|float == 28.05 }}
+  id: check_dog
 action:
 - choose:
   - conditions:
+    - '{{ script_1 != ''script.none''}}'
     - condition: trigger
       id: check_four
     sequence:
     - service: !input script_1
 - choose:
   - conditions:
+    - '{{ script_2 != ''script.none''}}'
     - condition: trigger
       id: check_v
     sequence:
     - service: !input script_2
 - choose:
   - conditions:
+    - '{{ script_3 != ''script.none''}}'
     - condition: trigger
       id: check_five
     sequence:
     - service: !input script_3
 - choose:
   - conditions:
+    - '{{ script_4 != ''script.none''}}'
     - condition: trigger
       id: check_gun
     sequence:
     - service: !input script_4
 - choose:
   - conditions:
+    - '{{ script_5 != ''script.none''}}'
     - condition: trigger
       id: check_ok
     sequence:
     - service: !input script_5
+- choose:
+  - conditions:
+    - '{{ script_6 != ''script.none''}}'
+    - condition: trigger
+      id: check_sound
+    sequence:
+    - service: !input script_6
+- choose:
+  - conditions:
+    - '{{ script_7 != ''script.none''}}'
+    - condition: trigger
+      id: check_action
+    sequence:
+    - service: !input script_7
+- choose:
+  - conditions:
+    - '{{ script_8 != ''script.none''}}'
+    - condition: trigger
+      id: check_stranger
+    sequence:
+    - service: !input script_8
+- choose:
+  - conditions:
+    - '{{ script_9 != ''script.none''}}'
+    - condition: trigger
+      id: check_acquaintance
+    sequence:
+    - service: !input script_9
+- choose:
+  - conditions:
+    - '{{ script_10 != ''script.none''}}'
+    - condition: trigger
+      id: check_people
+    sequence:
+    - service: !input script_10
+- choose:
+  - conditions:
+    - '{{ script_11 != ''script.none''}}'
+    - condition: trigger
+      id: check_dog
+    sequence:
+    - service: !input script_11
   default:
   - choose: []
     default: []
