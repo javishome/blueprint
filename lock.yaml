@@ -1,0 +1,14 @@
+mqtt:
+  lock:
+    - name: Khóa WIFI JAVIS
+      state_topic: "net_id/lock.1/state"
+      command_topic: "net_id/lock.1/set"
+      command_template: '{ "action": "{{ value }}" }'
+      payload_lock: "lock"
+      payload_unlock: "unlock"
+      state_locked: "lock"
+      state_unlocked: "unlock"
+      optimistic: false
+      qos: 0
+      retain: true
+      value_template: "{{ value.state }}"
