@@ -1,13 +1,12 @@
 blueprint:
   name: Liên kết nhiều công tắc
   description: |
-    ## Liên kết trạng thái ON/OFF nhiều thiết bị @by Javis team
+    ## Liên kết trạng thái ON/OFF nhiều thiết bị
 
-    Có thể chọn nhiều tcông tắc kiểu ON/OFF để liên kết với nhau. Khi một thiết bị ON thì các thiết bị còn lại sẽ đồng bộ trạng thái ON và ngược lại.
-    Yêu cầu các thiết bị phải hỗ trợ hành động `homeassistant.turn_on` or `homeassistant.turn_off` (các công tắc đều hỗ trợ hành động này)
+    Có thể chọn nhiều công tắc kiểu ON/OFF để liên kết với nhau. Khi một thiết bị ON thì các thiết bị còn lại sẽ đồng bộ trạng thái ON và ngược lại.
 
     ### Yêu cầu
-    * All selected entities MUST suport `homeassistant.turn_on` and `homeassistant.turn_off` or errors will be logged and the blueprint will not work.
+    * Yêu cầu các thiết bị phải hỗ trợ hành động `homeassistant.turn_on` or `homeassistant.turn_off` (các công tắc đều hỗ trợ hành động này)
     * Yêu cầu bản Home Assistant 2022.5.0 hoặc mới hơn
     
     ##Credits
