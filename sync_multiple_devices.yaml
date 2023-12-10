@@ -1,0 +1,49 @@
+blueprint:
+  name: Liên kết nhiều công tắc
+  description: |
+    ## Liên kết trạng thái ON/OFF nhiều thiết bị @by Javis team
+
+    Có thể chọn nhiều tcông tắc kiểu ON/OFF để liên kết với nhau. Khi một thiết bị ON thì các thiết bị còn lại sẽ đồng bộ trạng thái ON và ngược lại.
+    Yêu cầu các thiết bị phải hỗ trợ hành động `homeassistant.turn_on` or `homeassistant.turn_off` (các công tắc đều hỗ trợ hành động này)
+
+    ### Yêu cầu
+    * All selected entities MUST suport `homeassistant.turn_on` and `homeassistant.turn_off` or errors will be logged and the blueprint will not work.
+    * Yêu cầu bản Home Assistant 2022.5.0 hoặc mới hơn
+    
+    ##Credits
+    * Javis Home https://javishome.vn 
+
+  domain: automation
+  homeassistant:
+    min_version: 2022.5.0
+  input:
+    linked_entities:
+      name: Chọn các công tắc muốn liên kết
+      selector:
+        entity:
+          domain: switch
+          multiple: true
+
+mode: restart
+max_exceeded: silent
+
+variables:
+  linked_entities: !input 'linked_entities'
+
+trigger:
+- platform: state
+  entity_id: !input 'linked_entities'
+
+condition:
+- condition: template
+  value_template: '{{ trigger.to_state.state != trigger.from_state.state }}'
+- condition: template
+  value_template: '{{ (trigger.to_state.state == "on") or (trigger.to_state.state == "off") }}'
+- condition: template
+  value_template: '{{trigger.to_state.context.parent_id is none or (trigger.to_state.context.id != this.context.id and trigger.to_state.context.parent_id != this.context.id) }}'
+- condition: template
+  value_template: '{{ trigger.from_state.state != "unavailable" }}'
+action:
+- service: homeassistant.turn_{{ trigger.to_state.state }}
+  target:
+    entity_id: '{{ expand(linked_entities) | selectattr("entity_id", "!=", trigger.entity_id) | map(attribute="entity_id") | list }}'
