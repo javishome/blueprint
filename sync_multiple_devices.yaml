@@ -1,5 +1,5 @@
 blueprint:
-  name: Liên kết nhiều công tắc
+  name: Liên kết nhiều công tắc, đèn
   description: |
     ## Liên kết trạng thái ON/OFF nhiều thiết bị
 
@@ -17,10 +17,12 @@ blueprint:
     min_version: 2022.5.0
   input:
     linked_entities:
-      name: Chọn các công tắc muốn liên kết
+      name: Chọn các công tắc, đèn muốn liên kết
       selector:
         entity:
-          domain: switch
+          domain: 
+            - switch
+            - light
           multiple: true
 
 mode: restart
