@@ -33,7 +33,7 @@ blueprint:
     door_open_wait:
       name: Thời gian chờ khi mở cửa rồi mới tắt đèn
       description: Thời gian chờ khi mở cửa rồi mới tắt đèn
-      default: 2
+      default: 1
       selector:
         number:
           min: 0.0
@@ -71,115 +71,122 @@ blueprint:
         time:
     to_time:
       name: Thời gian kết thúc hiệu lực
-      description: Bắt đầu khoảng thời gian có hiệu lực
+      description: Kết thúc khoảng thời gian có hiệu lực
       default: "23:59:59"
       selector:
         time:
   source_url: https://raw.githubusercontent.com/javishome/blueprint/main/blueprint_bathroom_auto.yaml
 variables:
-  trigger_motion_sensor: !input trigger_motion_sensor
-  trigger_door_sensor: !input trigger_door_sensor
-  door_open_wait: !input door_open_wait
-  target_switch_1: !input target_switch_1
-  no_motion_door_close_wait: !input no_motion_door_close_wait
-  no_motion_wait: !input no_motion_wait
-  from_time: !input from_time
-  to_time: !input to_time
+  trigger_motion_sensor: trigger_motion_sensor
+  trigger_door_sensor: trigger_door_sensor
+  door_open_wait: door_open_wait
+  target_switch_1: target_switch_1
+  no_motion_door_close_wait: no_motion_door_close_wait
+  no_motion_wait: no_motion_wait
+  from_time: from_time
+  to_time: to_time
   
 trigger:
 - platform: state
-  entity_id: !input trigger_motion_sensor
+  entity_id: trigger_motion_sensor ## có chuyển động
   from: 'off'
   to: 'on'
   id: motion_on
-- platform: state
-  entity_id: !input trigger_motion_sensor
+- platform: state ## không có chuyển động
+  entity_id: trigger_motion_sensor
   from: 'on'
   to: 'off'
   id: motion_off
-- platform: state
-  entity_id: !input trigger_motion_sensor
+- platform: state ## không có chuyển động trong 1 khoảng thời gian và cửa mở
+  entity_id: trigger_motion_sensor
   from: 'on'
   to: 'off'
-  for: !input no_motion_wait
+  for: no_motion_wait
   id: no_motion_wait
-- platform: state
-  entity_id: !input trigger_door_sensor
+- platform: state ## cửa mở
+  entity_id: trigger_door_sensor
   from: 'off'
   to: 'on'
   id: door_on
-- platform: state
-  entity_id: !input trigger_door_sensor
+- platform: state ## cửa đóng
+  entity_id: trigger_door_sensor
   from: 'on'
   to: 'off'
   id: door_off
-- platform: state
-  entity_id: !input trigger_door_sensor
+- platform: state ## cửa mở trong 1 khoảng thời gian
+  entity_id: trigger_door_sensor
+  from: 'off'
+  to: 'on'
+  for: door_open_wait
+  id: door_open_wait
+- platform: state ##không có chuyển động trong 1 khoảng thời gian và cửa đóng
+  entity_id: trigger_motion_sensor
   from: 'on'
   to: 'off'
-  for: !input no_motion_door_close_wait
-  id: door_close_wait
+  for: no_motion_door_close_wait
+  id: no_motion_door_close_wait
 action:
-- choose:
-  - conditions:
+- choose: ##1. có chuyển động thì bật đèn trong khoảng thời gian thiết lập
+  - conditions: 
     - condition: trigger
       id: motion_on
     - condition: time
-      before: !input to_time
-      after: !input from_time
+      before: to_time
+      after: from_time
     sequence:
     - service: homeassistant.turn_on
       target:
-        entity_id: !input target_switch_1
-- choose:
+        entity_id: target_switch_1
+- choose:  ##2. cửa mở và không có chuyển động thì bật đèn
   - conditions:
-    - condition: trigger
-      id: no_motion_wait
-    - condition: time
-      before: !input to_time
-      after: !input from_time
-    sequence:
-    - service: homeassistant.turn_off
-      target:
-        entity_id: !input target_switch_1
-- choose:
-  - conditions:
-    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
-    - condition: trigger
-      id: door_close_wait
-    - condition: time
-      before: !input to_time
-      after: !input from_time
-    - condition: state
-      entity_id: !input trigger_motion_sensor
-      state: 'off'
-    sequence:
-    - service: homeassistant.turn_off
-      target:
-        entity_id: !input target_switch_1
-- choose: 
-  - conditions:
-    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count == 0 }}"
     - condition: trigger
       id: door_on
     - condition: time
-      before: !input to_time
-      after: !input from_time
+      before: to_time
+      after: from_time
+    - condition: state
+      entity_id: trigger_motion_sensor
+      state: 'off'
     sequence:
       - service: homeassistant.turn_on
         target:
-          entity_id: !input target_switch_1
-- choose: 
+          entity_id: target_switch_1
+- choose: ##3. không có chuyển động và cửa đóng thì tắt đèn sau 1 khoảng thời gian
   - conditions:
-    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
+    - condition: trigger
+      id: door_off
+    - condition: trigger
+      id: no_motion_door_close_wait
+    - condition: time
+      before: to_time
+      after: from_time
+    sequence:
+    - service: homeassistant.turn_off
+      target:
+        entity_id: target_switch_1
+- choose: ##4. không có chuyển động và cửa mở thì tắt đèn sau 1 khoảng thời gian
+  - conditions:
     - condition: trigger
       id: door_on
+    - condition: trigger
+      id: no_motion_wait
     - condition: time
-      before: !input to_time
-      after: !input from_time
+      before: to_time
+      after: from_time
     sequence:
-      - delay: 
-          seconds: '{{ door_open_wait | int(0) }}'
-      - service: homeassistant.turn_off
-        target:
-          entity_id: !input target_switch_1
+    - service: homeassistant.turn_off
+      target:
+        entity_id: target_switch_1
+- choose: ##5. cửa mở 1 khoảng thời gian và có chuyển động thì tắt đèn 
+  - conditions:
+    - condition: trigger
+      id: door_open_wait
+    - condition: trigger
+      id: motion_on
+    - condition: time
+      before: to_time
+      after: from_time
+    sequence:
+    - service: homeassistant.turn_off
+      target:
+        entity_id: target_switch_1
