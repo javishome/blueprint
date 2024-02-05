@@ -6,14 +6,14 @@ blueprint:
   input:
     target_switch_1:
       name: Đèn, công tắc, quạt vệ sinh
-      description: Chọn đèn, công tắc hoặc quạt thông gió trong phòng vệ sinh
+      description: Chọn 1 đèn, công tắc hoặc quạt thông gió trong phòng vệ sinh
       selector:
         entity:
           domain:
            - switch
            - light
            - fan
-          multiple: true
+          multiple: false
     trigger_motion_sensor:
       name: Cảm biến chuyển động 
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
@@ -44,7 +44,7 @@ blueprint:
     no_motion_wait:
       name: Thời gian tắt đèn khi cửa mở mà không có chuyển động
       description: Thời gian tắt đèn khi cửa mở mà không có chuyển động
-      default: 120
+      default: 60
       selector:
         number:
           min: 0.0
@@ -85,7 +85,10 @@ variables:
   no_motion_wait: !input no_motion_wait
   from_time: !input from_time
   to_time: !input to_time
-  
+
+mode: restart
+max_exceeded: silent
+
 trigger:
 - platform: state
   entity_id: !input trigger_motion_sensor ## có chuyển động
@@ -97,12 +100,6 @@ trigger:
   from: 'on'
   to: 'off'
   id: motion_off
-- platform: state ## không có chuyển động trong 1 khoảng thời gian và cửa mở
-  entity_id: !input trigger_motion_sensor
-  from: 'on'
-  to: 'off'
-  for: no_motion_wait
-  id: no_motion_wait
 - platform: state ## cửa mở
   entity_id: !input trigger_door_sensor
   from: 'off'
@@ -117,87 +114,106 @@ trigger:
   entity_id: !input trigger_door_sensor
   from: 'off'
   to: 'on'
-  for: door_open_wait
+  for: 
+    hours: 0
+    minutes: 0
+    seconds: !input door_open_wait
   id: door_open_wait
+- platform: state ## không có chuyển động trong 1 khoảng thời gian và cửa mở
+  entity_id: !input trigger_motion_sensor
+  from: 'on'
+  to: 'off'
+  for: 
+    hours: 0
+    minutes: 0
+    seconds: !input no_motion_wait
+  id: no_motion_wait
 - platform: state ##không có chuyển động trong 1 khoảng thời gian và cửa đóng
   entity_id: !input trigger_motion_sensor
   from: 'on'
   to: 'off'
-  for: no_motion_door_close_wait
+  for: 
+    hours: 0
+    minutes: 0
+    seconds: !input no_motion_door_close_wait
   id: no_motion_door_close_wait
 action:
-- choose:  ##1. Cửa đang đóng,không có chuyển động, mở cửa thì bật đèn
+- choose:  ##1. Cửa đang đóng, đèn đang tắt, mở cửa thì bật đèn
   - conditions:
     - condition: trigger
       id: door_on
+    - condition: state
+      entity_id: !input target_switch_1
+      state: 'off'
     - condition: time
       before: !input to_time
       after: !input from_time
-    - condition: state
-      entity_id: !input trigger_motion_sensor
-      state: 'off'
     sequence:
       - service: homeassistant.turn_on
         target:
           entity_id: !input target_switch_1
 - choose: ##2. Cửa đang đóng, đèn đang bật, mở cửa thì tắt đèn
   - conditions:
-    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
     - condition: trigger
       id: door_on
+    - condition: state
+      entity_id: !input target_switch_1
+      state: 'on'
     - condition: time
       before: !input to_time
       after: !input from_time
     sequence:
-      - delay: 
-          seconds: '{{ door_open_wait | int(0) }}'
       - service: homeassistant.turn_off
         target:
           entity_id: !input target_switch_1
 - choose: ##3. Cửa đang mở, không có chuyển động, đèn đang tắt, đi vào có chuyển động thì bật đèn
-  - conditions: 
+  - conditions:
+    - condition: state
+      entity_id: !input target_switch_1
+      state: 'off'
+    - condition: state
+      entity_id: !input trigger_door_sensor
+      state: 'on'
     - condition: trigger
       id: motion_on
     - condition: time
       before: !input to_time
       after: !input from_time
     sequence:
-    - service: homeassistant.turn_on
-      target:
-        entity_id: !input target_switch_1
+      - service: homeassistant.turn_on
+        target:
+          entity_id: !input target_switch_1
 - choose: ##4. không có chuyển động và cửa mở thì tắt đèn sau 1 khoảng thời gian
   - conditions:
-    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
     - condition: state
-      entity_id: !input trigger_motion_sensor
-      state: 'off'
+      entity_id: !input target_switch_1
+      state: 'on'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'on'
+    - condition: trigger
+      id: no_motion_wait
     - condition: time
       before: !input to_time
       after: !input from_time
     sequence:
-    - delay: 
-        seconds: '{{ no_motion_wait | int(0) }}'
-    - service: homeassistant.turn_off
-      target:
-        entity_id: !input target_switch_1
+      - service: homeassistant.turn_off
+        target:
+          entity_id: !input target_switch_1
 - choose: ##5. không có chuyển động và cửa đóng thì tắt đèn sau 1 khoảng thời gian tầm 10p
   - conditions:
-    - "{{ expand(target_switch_1) | selectattr('state', '==', 'on') | list | count > 0 }}"
     - condition: state
-      entity_id: !input trigger_motion_sensor
-      state: 'off'
+      entity_id: !input target_switch_1
+      state: 'on'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'off'
+    - condition: trigger
+      id: no_motion_door_close_wait
     - condition: time
       before: !input to_time
       after: !input from_time
     sequence:
-    - delay: 
-        seconds: '{{ no_motion_door_close_wait | int(0) }}'
-    - service: homeassistant.turn_off
-      target:
-        entity_id: !input target_switch_1
+      - service: homeassistant.turn_off
+        target:
+          entity_id: !input target_switch_1
