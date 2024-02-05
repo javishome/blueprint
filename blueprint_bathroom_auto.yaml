@@ -152,10 +152,10 @@ action:
       - service: homeassistant.turn_on
         target:
           entity_id: !input target_switch_1
-- choose: ##2. Cửa đang đóng, đèn đang bật, mở cửa thì tắt đèn
+- choose: ##2. Cửa đang đóng, đèn đang bật, mở cửa thì tắt đèn sau vài giây
   - conditions:
     - condition: trigger
-      id: door_on
+      id: door_open_wait
     - condition: state
       entity_id: !input target_switch_1
       state: 'on'
