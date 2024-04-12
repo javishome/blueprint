@@ -1,0 +1,48 @@
+blueprint:
+  name: Tự động hóa theo độ sáng đèn
+  description: kích hoat tự động dựa trên độ sáng của đèn
+  domain: automation
+  input:
+    entity_1:
+      name: Chọn đèn Aqara
+      selector:
+        entity:
+          domain:
+          - light
+          multiple: false
+    script_1:
+      name: Kịch bản tương ứng với độ sáng đèn
+      default: script.none
+      selector:
+        entity:
+          domain:
+          - script
+          multiple: false
+    light_level:
+      name: Chọn độ sáng từ 1-100
+      selector:
+        number:
+          min: 1
+          max: 100
+  source_url: https://raw.githubusercontent.com/javishome/blueprint/main/auto_brightness.yaml 
+trigger_variables:
+  entity_1: !input entity_1
+  script_1: !input script_1
+  light_level: !input light_level
+trigger:
+- platform: template
+  value_template: '{{ (state_attr( entity_1, "brightness") / 2.55 ) | int == light_level | int }}'
+  id: check_brightness
+action:
+- choose:
+  - conditions:
+    - '{{ script_1 != ''script.none''}}'
+    - condition: trigger
+      id: check_brightness
+    sequence:
+    - service: !input script_1
+  default:
+  - choose: []
+    default: []
+mode: single
+max_exceeded: silent
