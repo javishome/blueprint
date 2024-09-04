@@ -1,0 +1,295 @@
+blueprint:
+  name: AqaraH1SmartKnob_CCTLight
+  description: |
+    This automation allows you to use an Aqara H1 Smart Knob to control a CCT light.
+
+    Functionality:
+    - A single click of the wheel will toggle the light.
+    - Turning the wheel will change the brightness level.
+    - Pressing the wheel down and turning it while holding changes the color temperature.
+    - A double click of the wheel will set the default color temperature.
+
+    The Aqara H1 Smart Knob needs to be integrated using the zigbee2mqtt integration to have the required entities.
+
+    The light can be any light entity with a color temperatrue attribute.
+
+  domain: automation
+  input:
+    action_entity_id:
+      name: Aqara H1 Smart Knob Action Entity
+      description: Select the Action entity of your Aqara H1 Smart Knob.
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+          multiple: false
+    rotation_angle_speed_action_entity_id:
+      name: Aqara H1 Smart Knob Action Rotation Angle Speed Entity
+      description: Select the Action Rotation Angle Speed entity of your Aqara H1 Smart Knob.
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+          multiple: false
+    target_light:
+      name: Light Entity
+      description: |
+        Select the CCT light entity you want to control.
+      selector:
+        entity:
+          filter:
+            - domain: light
+          multiple: false
+    brightness_step_pct:
+      name: Brightness change per rotation step
+      description: Set the brightness change (in percentage points) that is applied when the wheel is turned one step.
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 10
+          unit_of_measurement: "%"
+    brightness_min_pct:
+      name: Minimum Brightness
+      description: |
+        Set the minimum brightness (in percent). 
+        If set to zero, the light will be turned off when zero brightness is reached.
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 99
+          unit_of_measurement: "%"
+    brightness_max_pct:
+      name: Maximum Brightness
+      description: Set the maximum brightness (in percent). Must be greater than the minimum.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          unit_of_measurement: "%"
+    turn_on_light_on_rotation:
+      name: Turn on light when the wheel is rotated
+      description: >
+        If enabled, the light will be turned on if the wheel is rotated.
+      default: true
+      selector:
+        boolean:
+    restore_brightness_when_turned_on_via_wheel_rotation:
+      name: Restore previous brightness when the light is turned on because of wheel rotation
+      description: |
+        If enabled, the light will be turned on at its previous brightness level if the wheel is rotated. 
+        If disabled, turning the wheel clockwise will turn on the light at minimum brightness; turning the wheel counter-clockwise will have no effect.
+
+        Note 1: Has no effect if the previous option is disabled.
+
+        Note 2: The light will be turned on at its previous brightness level independent of the rotation speed / angle of the wheel.
+
+        Note 3: if this option is enabled and the minimum brightness is zero and the light was turned off previously by rotating the wheel sufficiently long counter-clockwise, turning the wheel counter-clockwise will turn on the light at a very low level and the next counter-clockwise rotation will immediately turn off the light again.
+        This will feel counterintuitive to most users so it's best to set the minimum brightness to a value greater than zero when this option is enabled.
+      default: true
+      selector:
+        boolean:
+    colortemp_step:
+      name: Color Temperature change per rotation step
+      description: Set the color temperature change (in Kelvin) that is applied when the wheel is turned one step while being held (clicked).
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 1000
+          unit_of_measurement: "K"
+    colortemp_min:
+      name: Minimum Color Temperature
+      description: Set the minimum color temperature (in Kelvin).
+      default: 2700
+      selector:
+        number:
+          min: 1000
+          max: 9000
+          unit_of_measurement: "K"
+    colortemp_max:
+      name: Maximum Color Temperature
+      description: Set the maximum color temperature (in Kelvin).
+      default: 6500
+      selector:
+        number:
+          min: 1000
+          max: 9000
+          unit_of_measurement: "K"
+    colortemp_default:
+      name: Default Maximum Color Temperature
+      description: Set the default color temperature (in Kelvin).
+      default: 5400
+      selector:
+        number:
+          min: 1000
+          max: 9000
+          unit_of_measurement: "K"
+    set_default_colortemp_on_doubleclick:
+      name: Set Default Color Temperature on Double Click
+      description: If enabled, the default color temperature is applied when the wheel is double clicked.
+      default: true
+      selector:
+        boolean:
+variables:
+  ENTITY_H1_ACTION: !input action_entity_id
+  ENTITY_H1_ROTATION_ANGLE_SPEED: !input rotation_angle_speed_action_entity_id
+  ENTITY_TARGET_LIGHT: !input target_light
+  LIGHT_ROTATION_MULTIPLIER: !input brightness_step_pct
+  LIGHT_MIN_BRIGHTNESS_PCT: !input brightness_min_pct
+  LIGHT_MAX_BRIGHTNESS_PCT: !input brightness_max_pct
+  LIGHT_TURN_ON_ON_ROTATION: !input turn_on_light_on_rotation
+  LIGHT_RESTORE_BRIGHTNESS: !input restore_brightness_when_turned_on_via_wheel_rotation
+  COLOR_TEMP_STEP: !input colortemp_step
+  COLOR_TEMP_MIN: !input colortemp_min
+  COLOR_TEMP_MAX: !input colortemp_max
+  COLOR_TEMP_DEFAULT: !input colortemp_default
+  APPLY_DEFAULT_COLORTEMP_ON_DOUBLECLICK: !input set_default_colortemp_on_doubleclick
+
+trigger:
+  - platform: state
+    entity_id: !input action_entity_id
+    to: null
+    enabled: true
+    id: ACTION
+  - platform: state
+    entity_id:
+      - !input rotation_angle_speed_action_entity_id
+    id: ROTATION_ANGLE_SPEED
+    enabled: true
+    to: unknown
+  - platform: state
+    entity_id:
+      - !input rotation_angle_speed_action_entity_id
+    from: null
+    to: null
+    id: ROTATION_ANGLE_SPEED_BUTTON_HELD
+    enabled: true
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - ACTION
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{trigger.to_state.state == 'single'}}"
+                    alias: Single
+                sequence:
+                  - service: light.toggle
+                    metadata: {}
+                    data:
+                      transition: 2
+                    target:
+                      entity_id: "{{ ENTITY_TARGET_LIGHT }}"
+                    enabled: true
+                alias: Toggle Light on "Single Click"
+              - conditions:
+                  - condition: template
+                    value_template: "{{trigger.to_state.state == 'double'}}"
+                    alias: Double
+                  - condition: template
+                    value_template: "{{ APPLY_DEFAULT_COLORTEMP_ON_DOUBLECLICK }}"
+                sequence:
+                  - service: light.turn_on
+                    metadata: {}
+                    data:
+                      transition: 2
+                      kelvin: "{{ COLOR_TEMP_DEFAULT }}"
+                    target:
+                      entity_id: "{{ ENTITY_TARGET_LIGHT }}"
+                    enabled: true
+                alias: Set Default color tenperature on "Double Click"
+      - conditions:
+          - condition: trigger
+            id:
+              - ROTATION_ANGLE_SPEED
+          - condition: or
+            conditions:
+              - condition: template
+                value_template: >-
+                  {{ (trigger.from_state.state | int > 0 or (trigger.from_state.state | int < 0 and LIGHT_RESTORE_BRIGHTNESS)) and
+                  (states(ENTITY_TARGET_LIGHT) == 'off' and LIGHT_TURN_ON_ON_ROTATION) }}
+                alias: >-
+                  Testen ob das Licht aus ist und die Helligkeit soll erhöht
+                  werden
+              - condition: template
+                value_template: >-
+                  {{ trigger.from_state.state | int > 0 and
+                  state_attr(ENTITY_TARGET_LIGHT, 'brightness') / 2.55 <
+                  LIGHT_MAX_BRIGHTNESS_PCT }}
+                alias: >-
+                  Testen ob die Helligkeit erhöht werden soll und max.
+                  Helligkeit nicht erreicht ist
+              - condition: template
+                value_template: >-
+                  {{ trigger.from_state.state | int < 0 and
+                  state_attr(ENTITY_TARGET_LIGHT, 'brightness') / 2.55 >
+                  LIGHT_MIN_BRIGHTNESS_PCT }}
+                alias: >-
+                  Testen ob die Helligkeit verringert werden soll und min.
+                  Helligkeit nicht erreicht ist
+        sequence:
+          - if:
+              - alias: "If light is off and brightness shall be restored"
+                condition: template
+                value_template: "{{ states(ENTITY_TARGET_LIGHT) == 'off' and LIGHT_RESTORE_BRIGHTNESS }}"
+            then:
+              - alias: "Restore brightness"
+                service: light.turn_on
+                target:
+                  entity_id: "{{ ENTITY_TARGET_LIGHT }}"
+            else:
+              - service: light.turn_on
+                metadata: {}
+                data:
+                  brightness_pct: >-
+                    {## Gewünschte Schrittweite berechnen ##} {% set STEP_SIZE =
+                    trigger.from_state.state | int * LIGHT_ROTATION_MULTIPLIER / 12 %}
+                    {## Gewünschte Helligkeit in Variable speichern ##} {% if
+                    states(ENTITY_TARGET_LIGHT) == 'off' %}
+                      {% set BRIGHTNESS_PCT = LIGHT_MIN_BRIGHTNESS_PCT %}
+                    {% else  %}
+                      {% set BRIGHTNESS_PCT = STEP_SIZE + state_attr(ENTITY_TARGET_LIGHT, 'brightness') / 2.55  %}
+                    {% endif %} {## Neuen Helligkeitswert unter Einhaltung der
+                    Limits setzen  ##}  {{ min(LIGHT_MAX_BRIGHTNESS_PCT,
+                    max(LIGHT_MIN_BRIGHTNESS_PCT, BRIGHTNESS_PCT)) }}
+                target:
+                  entity_id: "{{ ENTITY_TARGET_LIGHT }}"
+      - conditions:
+          - condition: trigger
+            id:
+              - ROTATION_ANGLE_SPEED_BUTTON_HELD
+          - condition: template
+            value_template: "{{ states(ENTITY_TARGET_LIGHT) == 'on' }}"
+          - condition: template
+            value_template: "{{ trigger.to_state.state != 'unknown' and trigger.from_state.state != 'unknown' }}"
+        sequence:
+          - service: light.turn_on
+            metadata: {}
+            data:
+              kelvin: >-
+                {## Gewünschte Schrittweite berechnen ##} {% set STEP_SIZE =
+                trigger.to_state.state | int * COLOR_TEMP_STEP / 12 %} {##
+                Aktuelle Farbtemperatur in Variable speichern ##} {% set
+                COLOR_TEMP_KELVIN = state_attr(ENTITY_TARGET_LIGHT,
+                'color_temp_kelvin') %} {## Tatsächliche Grenzwerte berechnen
+                ##} {% set COLOR_TEMP_MIN = max(COLOR_TEMP_MIN,
+                state_attr(ENTITY_TARGET_LIGHT, 'min_color_temp_kelvin')) %} {%
+                set COLOR_TEMP_MAX = min(COLOR_TEMP_MAX,
+                state_attr(ENTITY_TARGET_LIGHT, 'max_color_temp_kelvin')) %}
+
+                {## Neue Farbtemperatur unter Einhaltung der Limits setzen ##}
+                {{ min(COLOR_TEMP_MAX, max(COLOR_TEMP_MIN, COLOR_TEMP_KELVIN +
+                STEP_SIZE)) }}
+            target:
+              entity_id: "{{ ENTITY_TARGET_LIGHT }}"
+trace:
+  stored_traces: 20
+mode: queued
+max: 30
