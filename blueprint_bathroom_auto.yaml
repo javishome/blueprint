@@ -20,7 +20,9 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
-          device_class: motion
+          device_class:
+          - motion
+          - occupancy
           multiple: false
     trigger_door_sensor:
       name: Cảm biến cửa
@@ -28,7 +30,9 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
-          device_class: door
+          device_class: 
+          - door
+          - window
           multiple: false
     door_open_wait:
       name: Thời gian chờ khi mở cửa rồi mới tắt đèn
