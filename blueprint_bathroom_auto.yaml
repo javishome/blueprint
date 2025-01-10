@@ -146,11 +146,11 @@ action:
   - conditions:
     - condition: trigger
       id: door_on
-    - condition: and
-      conditions:
-        - condition: state
-          entity_id: !input target_switch_1
-          state: 'off'
+    # - condition: or
+    #   conditions:
+    #     - condition: state
+    #       entity_id: !input target_switch_1
+    #       state: 'off'
     - condition: time
       before: !input to_time
       after: !input from_time
