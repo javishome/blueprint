@@ -89,6 +89,7 @@ variables:
   no_motion_wait: !input no_motion_wait
   from_time: !input from_time
   to_time: !input to_time
+  first_device: "{{ target_switch_1[0] }}"
 
 mode: restart
 max_exceeded: silent
@@ -141,8 +142,6 @@ trigger:
     minutes: 0
     seconds: !input no_motion_door_close_wait
   id: no_motion_door_close_wait
-variables:
-  first_device: "{{ (target_switch_1 | list)[0] }}"
 action:
 - choose:  ##1. Cửa đang đóng, đèn đang tắt, mở cửa thì bật đèn
   - conditions:
