@@ -146,7 +146,7 @@ action:
   - conditions:
     - condition: trigger
       id: door_on
-    - condition: or
+    - condition: and
       conditions:
         - condition: state
           entity_id: !input target_switch_1
