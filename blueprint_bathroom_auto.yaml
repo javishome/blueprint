@@ -146,6 +146,9 @@ action:
   - conditions:
     - condition: trigger
       id: door_on
+    - condition: state
+      entity_id: !input target_switch_1[0]
+      state: 'off'
     - condition: time
       before: !input to_time
       after: !input from_time
@@ -157,11 +160,8 @@ action:
   - conditions:
     - condition: trigger
       id: door_open_wait
-    - condition: or
-      conditions:
-        - condition: state
-          entity_id: !input target_switch_1
-          state: 'on'
+    - condition: state
+      entity_id: !input target_switch_1[0]
     - condition: time
       before: !input to_time
       after: !input from_time
@@ -171,11 +171,9 @@ action:
           entity_id: !input target_switch_1
 - choose: ##3. Cửa đang mở, không có chuyển động, đèn đang tắt, đi vào có chuyển động thì bật đèn
   - conditions:
-    - condition: or
-      conditions:
-        - condition: state
-          entity_id: !input target_switch_1
-          state: 'off'
+    - condition: state
+      entity_id: !input target_switch_1[0]
+      state: 'off'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'on'
@@ -190,11 +188,9 @@ action:
           entity_id: !input target_switch_1
 - choose: ##4. không có chuyển động và cửa mở thì tắt đèn sau 1 khoảng thời gian
   - conditions:
-    - condition: or
-      conditions:
-        - condition: state
-          entity_id: !input target_switch_1
-          state: 'on'
+    - condition: state
+      entity_id: !input target_switch_1[0]
+      state: 'on'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'on'
@@ -209,11 +205,9 @@ action:
           entity_id: !input target_switch_1
 - choose: ##5. không có chuyển động và cửa đóng thì tắt đèn sau 1 khoảng thời gian tầm 10p
   - conditions:
-    - condition: or
-      conditions:
-        - condition: state
-          entity_id: !input target_switch_1
-          state: 'on'
+    - condition: state
+      entity_id: !input target_switch_1[0]
+      state: 'on'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'off'
