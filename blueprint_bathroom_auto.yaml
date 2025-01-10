@@ -13,7 +13,7 @@ blueprint:
            - switch
            - light
            - fan
-          multiple: false
+          multiple: true
     trigger_motion_sensor:
       name: Cảm biến chuyển động 
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
