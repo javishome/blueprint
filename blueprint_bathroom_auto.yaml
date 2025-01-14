@@ -13,7 +13,7 @@ blueprint:
            - switch
            - light
            - fan
-          multiple: false
+          multiple: true
     trigger_motion_sensor:
       name: Cảm biến chuyển động 
       description: Chọn 1 cảm biến chuyển động trong phòng vệ sinh
@@ -142,20 +142,6 @@ trigger:
     seconds: !input no_motion_door_close_wait
   id: no_motion_door_close_wait
 action:
-- choose:  ##1. Cửa đang đóng, đèn đang tắt, mở cửa thì bật đèn
-  - conditions:
-    - condition: trigger
-      id: door_on
-    - condition: state
-      entity_id: !input target_switch_1
-      state: 'off'
-    - condition: time
-      before: !input to_time
-      after: !input from_time
-    sequence:
-      - service: homeassistant.turn_on
-        target:
-          entity_id: !input target_switch_1
 - choose: ##2. Cửa đang đóng, đèn đang bật, mở cửa thì tắt đèn sau vài giây
   - conditions:
     - condition: trigger
@@ -170,14 +156,22 @@ action:
       - service: homeassistant.turn_off
         target:
           entity_id: !input target_switch_1
-- choose: ##3. Cửa đang mở, không có chuyển động, đèn đang tắt, đi vào có chuyển động thì bật đèn
+- choose:  ##1. Cửa đang đóng, đèn đang tắt, mở cửa thì bật đèn
   - conditions:
+    - condition: trigger
+      id: door_on
     - condition: state
       entity_id: !input target_switch_1
       state: 'off'
-    - condition: state
-      entity_id: !input trigger_door_sensor
-      state: 'on'
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+      - service: homeassistant.turn_on
+        target:
+          entity_id: !input target_switch_1
+- choose: ##3. Cửa đang mở, không có chuyển động, đèn đang tắt, đi vào có chuyển động thì bật đèn
+  - conditions:
     - condition: trigger
       id: motion_on
     - condition: time
@@ -189,9 +183,6 @@ action:
           entity_id: !input target_switch_1
 - choose: ##4. không có chuyển động và cửa mở thì tắt đèn sau 1 khoảng thời gian
   - conditions:
-    - condition: state
-      entity_id: !input target_switch_1
-      state: 'on'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'on'
@@ -206,9 +197,6 @@ action:
           entity_id: !input target_switch_1
 - choose: ##5. không có chuyển động và cửa đóng thì tắt đèn sau 1 khoảng thời gian tầm 10p
   - conditions:
-    - condition: state
-      entity_id: !input target_switch_1
-      state: 'on'
     - condition: state
       entity_id: !input trigger_door_sensor
       state: 'off'
