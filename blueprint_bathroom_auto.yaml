@@ -37,7 +37,7 @@ blueprint:
     door_open_wait:
       name: Thời gian chờ khi mở cửa rồi mới tắt đèn
       description: Thời gian chờ khi mở cửa rồi mới tắt đèn
-      default: 1
+      default: 2
       selector:
         number:
           min: 0.0
@@ -118,28 +118,19 @@ trigger:
   entity_id: !input trigger_door_sensor
   from: 'off'
   to: 'on'
-  for: 
-    hours: 0
-    minutes: 0
-    seconds: !input door_open_wait
+  for: !input door_open_wait
   id: door_open_wait
 - platform: state ## không có chuyển động trong 1 khoảng thời gian và cửa mở
   entity_id: !input trigger_motion_sensor
   from: 'on'
   to: 'off'
-  for: 
-    hours: 0
-    minutes: 0
-    seconds: !input no_motion_wait
+  for: !input no_motion_wait
   id: no_motion_wait
 - platform: state ##không có chuyển động trong 1 khoảng thời gian và cửa đóng
   entity_id: !input trigger_motion_sensor
   from: 'on'
   to: 'off'
-  for: 
-    hours: 0
-    minutes: 0
-    seconds: !input no_motion_door_close_wait
+  for: !input no_motion_door_close_wait
   id: no_motion_door_close_wait
 action:
 - choose: ##2. Cửa đang đóng, đèn đang bật, mở cửa thì tắt đèn sau vài giây
@@ -160,9 +151,9 @@ action:
   - conditions:
     - condition: trigger
       id: door_on
-    - condition: state
-      entity_id: !input target_switch_1
-      state: 'off'
+    # - condition: state
+    #   entity_id: !input target_switch_1
+    #   state: 'off'
     - condition: time
       before: !input to_time
       after: !input from_time
