@@ -1,0 +1,120 @@
+blueprint:
+  name: Tự động bật tắt
+  description: Tự động bật tắt đèn dựa trên các cảm biến
+  domain: automation
+  input:
+    trigger_sensor:
+      name: Cảm biến
+      description: Chọn các cảm biến 
+      selector:
+        entity:
+          domain:
+          - binary_sensor
+          device_class:
+          - motion
+          - occupancy
+          - door
+          - window
+          multiple: true
+    turn_on_after:
+      name: Thời gian bật thiết bị sau khi cảm biến kích hoạt
+      description: Chọn thời gian sau bao lâu cảm biến phát hiện thì sẽ bật thiết bị
+      default: 2
+      selector:
+        number:
+          min: 0.0
+          max: 120.0
+          unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+    condition_auto:
+      name: Thêm điều kiện kích hoạt để bật thiết bị
+      description: Thêm điều kiện (nếu cần) để bật các thiết bị
+      default: []
+      selector:
+        condition: {}
+    target_switch_1:
+      name: Chọn thiết bị
+      description: Chọn thiết bị muốn bật tắt (Công tắc, đèn, quạt)
+      selector:
+        entity:
+          domain:
+          - switch
+          - light
+          - fan
+          multiple: true
+    turn_off_after:
+      name: Thời gian tắt thiết bị sau khi cảm biến kích hoạt
+      description: Chọn thời gian sau bao lâu cảm biến hết phát hiện thì sẽ tắt thiết bị
+      default: 2
+      selector:
+        number:
+          min: 0.0
+          max: 120.0
+          unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+    from_time:
+      name: Thời gian bắt đầu hiệu lực
+      description: Bắt đầu khoảng thời gian có hiệu lực
+      default: '00:00:00'
+      selector:
+        time: {}
+    to_time:
+      name: Thời gian kết thúc hiệu lực
+      description: Kết thúc khoảng thời gian có hiệu lực
+      default: '23:59:59'
+      selector:
+        time: {}
+  source_url: https://github.com/javishome/blueprint/blob/main/sensor_light.yaml
+variables:
+  trigger_sensor: !input trigger_sensor
+  turn_on_after: !input turn_on_after
+  target_switch_1: !input target_switch_1
+  turn_off_after: !input turn_off_after
+  condition_auto: !input condition_auto
+  from_time: !input from_time
+  to_time: !input to_time
+mode: restart
+max_exceeded: silent
+trigger:
+- platform: state
+  entity_id: !input trigger_sensor
+  to: 'on'
+  for: !input turn_on_after
+  id: sensor_on
+- platform: state
+  entity_id: !input trigger_sensor
+  from: 'on'
+  to: 'off'
+  for: !input turn_off_after
+  id: sensor_off
+action:
+- choose:
+  - conditions:
+    - condition: !input condition_auto
+    - condition: state #Chỉ cần một cảm biến kích hoạt thì sẽ bật các thiết bị
+      entity_id: !input trigger_sensor
+      match: any
+      state: 'on'
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+    - service: homeassistant.turn_on
+      target:
+        entity_id: !input target_switch_1
+- choose:
+  - conditions:
+    - condition: state #Cần tất cả các cảm biến hết phát hiện thì mới tắt thiết bị
+      entity_id: !input trigger_sensor 
+      match: all
+      state: 'off'
+    - condition: time
+      before: !input to_time
+      after: !input from_time
+    sequence:
+    - service: homeassistant.turn_off
+      target:
+        entity_id: !input target_switch_1
+
