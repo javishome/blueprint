@@ -1,0 +1,77 @@
+blueprint:
+  name: Giới hạn nhiệt độ điều hòa
+  description: Giới hạn nhiệt độ của điều hòa không vượt quá hoặc giảm quá mức cho phép
+  domain: automation
+  input:
+    climate_entity:
+      name: Chọn điều hòa
+      description: Chọn diều hòa muốn giới hạn nhiệt độ
+      selector:
+        entity:
+          domain:
+            - climate
+          multiple: false
+    limit_up:
+      name: Giới hạn nhiệt độ trên
+      description: Chọn mức nhiệt độ mà điều hòa không vượt quá
+      default: 30
+      selector:
+        number:
+          min: 16.0
+          max: 30.0
+          unit_of_measurement: °C
+          step: 1.0
+          mode: slider
+    limit_down:
+      name: Giới hạn nhiệt độ dưới
+      description: Chọn mức nhiệt độ mà điều hòa không giảm quá
+      default: 16
+      selector:
+        number:
+          min: 16.0
+          max: 30.0
+          unit_of_measurement: °C
+          step: 1.0
+          mode: slider
+
+variables:
+  climate_entity: !input climate_entity
+  limit_up: !input limit_up
+  limit_down: !input limit_down
+mode: single
+max_exceeded: silent
+trigger:
+- platform: numeric_state
+  entity_id: !input climate_entity
+  attribute: temperature
+  above: !input limit_up 
+  id: temp_over
+- platform: numeric_state
+  entity_id: !input climate_entity
+  attribute: temperature
+  below: !input limit_down
+  id: temp_under
+action:
+- choose:
+  - conditions:
+    - condition: trigger
+      id: temp_over
+    sequence:
+    - service: climate.set_temperature
+      data:
+        # hvac_mode: cool
+        temperature: !input limit_up
+      target:
+        entity_id: !input climate_entity
+- choose:
+  - conditions:
+    - condition: trigger
+      id: temp_under
+    sequence:
+    - service: climate.set_temperature
+      data:
+        # hvac_mode: cool
+        temperature: !input limit_down
+      target:
+        entity_id: !input climate_entity
+
