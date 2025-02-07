@@ -1,6 +1,6 @@
 blueprint:
-  name: Tự động bật tắt
-  description: Tự động bật tắt đèn dựa trên các cảm biến
+  name: Tự động bật tắt đèn theo cảm biến cửa, chuyển động
+  description: Tự động bật đèn, công tắc, quạt khi cảm biến kích hoạt, tự tắt sau một khoảng thời gian.
   domain: automation
   input:
     trigger_sensor:
@@ -18,7 +18,7 @@ blueprint:
           multiple: true
     turn_on_after:
       name: Thời gian bật thiết bị sau khi cảm biến kích hoạt
-      description: Chọn thời gian sau bao lâu cảm biến phát hiện thì sẽ bật thiết bị
+      description: Chọn thời gian (giây) sau bao lâu cảm biến phát hiện thì sẽ bật thiết bị
       default: 2
       selector:
         number:
@@ -45,7 +45,7 @@ blueprint:
           multiple: true
     turn_off_after:
       name: Thời gian tắt thiết bị sau khi cảm biến kích hoạt
-      description: Chọn thời gian sau bao lâu cảm biến hết phát hiện thì sẽ tắt thiết bị
+      description: Chọn thời gian (giây) sau bao lâu cảm biến hết phát hiện thì sẽ tắt thiết bị
       default: 2
       selector:
         number:
