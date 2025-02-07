@@ -1,6 +1,6 @@
 blueprint:
-  name: Giới hạn nhiệt độ điều hòa
-  description: Giới hạn nhiệt độ của điều hòa không vượt quá hoặc giảm quá mức cho phép
+  name: Giới hạn chỉ được bật điều hòa trong khoảng nhiệt độ cho phép
+  description: Giới hạn nhiệt độ của điều hòa không vượt quá hoặc dưới mức cho phép
   domain: automation
   input:
     climate_entity:
