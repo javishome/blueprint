@@ -33,11 +33,18 @@ blueprint:
           unit_of_measurement: °C
           step: 1.0
           mode: slider
+    condition_auto:
+      name: Thêm điều kiện kích hoạt để bật thiết bị
+      description: Thêm điều kiện (nếu cần) để bật các thiết bị
+      default: []
+      selector:
+        condition: {}
 
 variables:
   climate_entity: !input climate_entity
   limit_up: !input limit_up
   limit_down: !input limit_down
+  condition_auto: !input condition_auto
 mode: single
 max_exceeded: silent
 trigger:
@@ -54,6 +61,7 @@ trigger:
 action:
 - choose:
   - conditions:
+    - condition: !input condition_auto
     - condition: trigger
       id: temp_over
     sequence:
@@ -65,6 +73,7 @@ action:
         entity_id: !input climate_entity
 - choose:
   - conditions:
+    - condition: !input condition_auto
     - condition: trigger
       id: temp_under
     sequence:
