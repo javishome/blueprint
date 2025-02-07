@@ -54,18 +54,6 @@ blueprint:
           unit_of_measurement: seconds
           step: 1.0
           mode: slider
-    from_time:
-      name: Thời gian bắt đầu hiệu lực
-      description: Bắt đầu khoảng thời gian có hiệu lực
-      default: '00:00:00'
-      selector:
-        time: {}
-    to_time:
-      name: Thời gian kết thúc hiệu lực
-      description: Kết thúc khoảng thời gian có hiệu lực
-      default: '23:59:59'
-      selector:
-        time: {}
   source_url: https://github.com/javishome/blueprint/blob/main/sensor_light.yaml
 variables:
   trigger_sensor: !input trigger_sensor
@@ -73,8 +61,6 @@ variables:
   target_switch_1: !input target_switch_1
   turn_off_after: !input turn_off_after
   condition_auto: !input condition_auto
-  from_time: !input from_time
-  to_time: !input to_time
 mode: restart
 max_exceeded: silent
 trigger:
@@ -97,9 +83,6 @@ action:
       entity_id: !input trigger_sensor
       match: any
       state: 'on'
-    - condition: time
-      before: !input to_time
-      after: !input from_time
     sequence:
     - service: homeassistant.turn_on
       target:
@@ -110,9 +93,6 @@ action:
       entity_id: !input trigger_sensor 
       match: all
       state: 'off'
-    - condition: time
-      before: !input to_time
-      after: !input from_time
     sequence:
     - service: homeassistant.turn_off
       target:
