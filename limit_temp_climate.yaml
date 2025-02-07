@@ -34,8 +34,8 @@ blueprint:
           step: 1.0
           mode: slider
     condition_auto:
-      name: Thêm điều kiện kích hoạt để bật thiết bị
-      description: Thêm điều kiện (nếu cần) để bật các thiết bị
+      name: Thêm điều kiện để kích hoạt tự động hóa
+      description: Thêm điều kiện (nếu cần) để kích hoạt tự động này
       default: []
       selector:
         condition: {}
