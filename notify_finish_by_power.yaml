@@ -1,5 +1,5 @@
 blueprint:
-  name: Appliance has finished
+  name: Monitoring Appliance Status Based on Power Meter
   description: Do something when an appliance (like a washing machine or dishwasher)
     has finished as detected by a power sensor.
   domain: automation
@@ -57,12 +57,12 @@ blueprint:
           mode: slider
           step: 0.25
     actions:
-      name: Actions
+      name: Finished Actions
       description: Actions (e.g. pushing a notification, TTS announcement, ...)
       selector:
         action: {}
     pre_actions:
-      name: Actions
+      name: Starting Actions
       description: Actions when starting threshhold is crossed
       selector:
         action: {}
