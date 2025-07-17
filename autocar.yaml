@@ -35,7 +35,7 @@ action:
       sequence:
       - service: mqtt.publish
         data:
-          topic_template: "zigbee2mqtt/{{ switch_entity2.split('.')[1] }}/get"
+          topic: "{{ 'zigbee2mqtt/' ~ switch_entity2.split('.')[1] ~ '/get' }}"
           payload: '{"state": ""}'
   - choose:
     - conditions: 
@@ -47,7 +47,7 @@ action:
       sequence:
       - service: mqtt.publish
         data:
-          topic_template: "zigbee2mqtt/{{ switch_entity2.split('.')[1] }}/get"
+          topic: "{{ 'zigbee2mqtt/' ~ switch_entity2.split('.')[1] ~ '/get' }}"
           payload: '{"state": ""}'
     default:
       - choose: []
