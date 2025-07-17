@@ -140,6 +140,9 @@ action:
     - condition: state
       entity_id: !input target_switch_1
       state: 'on'
+    - condition: state
+      entity_id: !input trigger_motion_sensor
+      state: 'off'
     - condition: time
       before: !input to_time
       after: !input from_time
