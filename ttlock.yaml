@@ -1,0 +1,68 @@
+blueprint:
+  name: Kích hoạt hành động khi người dùng cụ thể mở khóa
+  description: >-
+    Chạy một hành động khi một khóa thông minh được mở bởi một người dùng có tên nằm trong danh sách cho phép.
+    Hữu ích cho các loại khóa như TTLock có cảm biến 'last_operator'.
+    Bạn cũng có thể thêm các điều kiện bổ sung (ví dụ: chỉ chạy vào ban đêm).
+  domain: automation
+  input:
+    smart_lock:
+      name: Khóa thông minh
+      description: Chọn thực thể khóa (entity) cần theo dõi.
+      selector:
+        entity:
+          domain: lock
+    operator_sensor:
+      name: Cảm biến người mở khóa
+      description: Chọn cảm biến (sensor) lưu tên của người vừa mở khóa.
+      selector:
+        entity:
+          domain: sensor
+    allowed_operators:
+      name: Tên người dùng được phép
+      description: "Nhập các tên người dùng sẽ kích hoạt hành động, CÁCH NHAU BỞI DẤU PHẨY. Ví dụ: Dao, Truong, Hanh"
+      selector:
+        text:
+    extra_conditions:
+      name: Điều kiện bổ sung (Tùy chọn)
+      description: "Các điều kiện này phải được thỏa mãn CÙNG VỚI điều kiện người dùng ở trên (logic 'VÀ')."
+      selector:
+        condition:
+      default: {}
+    actions_to_perform:
+      name: Hành động
+      description: Hành động sẽ được thực thi khi khóa được mở bởi người dùng hợp lệ và các điều kiện bổ sung được thỏa mãn.
+      selector:
+        action:
+
+# Khai báo các biến để sử dụng trong template cho dễ đọc
+variables:
+  # Lấy danh sách tên người dùng từ input, tách chuỗi bằng dấu phẩy
+  operator_list: !input allowed_operators
+  # Lấy trạng thái của cảm biến người mở khóa
+  current_operator: !input operator_sensor
+
+trigger:
+  - platform: state
+    entity_id: !input smart_lock
+    to: "unlocked"
+    # Bỏ qua các thay đổi thuộc tính để tránh kích hoạt nhầm
+    not_from:
+      - "unknown"
+      - "unavailable"
+
+condition:
+  - condition: and
+    conditions:
+      # Điều kiện 1: Tên người mở khóa phải nằm trong danh sách cho phép
+      - condition: template
+        value_template: >
+          {{ any(name.strip() in states(current_operator) for name in operator_list.split(',')) }}
+
+      # Điều kiện 2: Các điều kiện bổ sung do người dùng định nghĩa
+      - !input extra_conditions
+
+action:
+  - !input actions_to_perform
+
+mode: single
