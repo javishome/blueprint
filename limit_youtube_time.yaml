@@ -43,11 +43,15 @@ trigger:
   - platform: state
     entity_id: !input time_sensor
 
+variables:
+  time_sensor_entity: !input time_sensor
+  max_time_minutes: !input max_time
+
 condition:
   - condition: template
     value_template: >-
-      {% set value = states(!input time_sensor) | float(0) %}
-      {% set max_limit = (!input max_time | float(0)) / 60 %}
+      {% set value = states(time_sensor_entity) | float(0) %}
+      {% set max_limit = max_time_minutes | float(0) / 60 %}
       {{ value > max_limit }}
 
   - condition: template
@@ -60,7 +64,7 @@ condition:
       {% endif %}
 
 action:
-  - service: switch.turn_off
+  - service: homeassistant.turn_off
     target:
       entity_id: !input target_device
 
