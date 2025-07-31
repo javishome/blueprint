@@ -27,10 +27,10 @@ blueprint:
       selector:
         entity:
           domain: 
-          - switch
-          - media_player
-          - light
-        multiple: true
+            - switch
+            - media_player
+            - light
+          multiple: true
     extra_actions:
       name: Hành động bổ sung (tùy chọn)
       description: Các hành động khác sẽ được thực thi sau khi tắt thiết bị.
