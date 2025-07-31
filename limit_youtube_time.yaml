@@ -1,0 +1,54 @@
+blueprint:
+  name: Tắt thiết bị nếu sensor thời gian vượt ngưỡng
+  description: Tự động tắt thiết bị nếu sensor thời gian vượt quá giới hạn định sẵn.
+  domain: automation
+  input:
+    time_sensor:
+      name: Cảm biến thời gian sử dụng
+      description: Sensor theo dõi thời gian thiết bị đang hoạt động (đơn vị phút hoặc giờ).
+      selector:
+        entity:
+          domain: sensor
+
+    max_time:
+      name: Giới hạn thời gian
+      description: Nếu giá trị của cảm biến vượt quá giới hạn này, thiết bị sẽ bị tắt.
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 10000
+          unit_of_measurement: phút
+          mode: box
+
+    target_device:
+      name: Thiết bị cần tắt
+      description: Thiết bị sẽ bị tắt nếu vượt ngưỡng thời gian.
+      selector:
+        entity:
+          domain: switch
+
+trigger:
+  - platform: state
+    entity_id: !input time_sensor
+
+condition:
+  - condition: numeric_state
+    entity_id: !input time_sensor
+    above: !input max_time
+    
+  - condition: template
+    value_template: >-
+      {% set last_triggered = state_attr(this.entity_id, 'last_triggered') %}
+      {% if last_triggered is none %}
+        true
+      {% else %}
+        {{ now().date() != last_triggered.date() }}
+      {% endif %}
+
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: !input target_device
+
+mode: single
