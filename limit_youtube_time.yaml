@@ -5,7 +5,7 @@ blueprint:
   input:
     time_sensor:
       name: Cảm biến thời gian sử dụng
-      description: Sensor theo dõi thời gian thiết bị đang hoạt động (đơn vị giờ - từ history_stats).
+      description: Sensor theo dõi thời gian thiết bị đang hoạt động (đơn vị giờ).
       selector:
         entity:
           domain: sensor
@@ -26,7 +26,7 @@ blueprint:
       description: Thiết bị sẽ bị tắt nếu vượt ngưỡng thời gian.
       selector:
         entity:
-          domain: 
+          domain:
             - switch
             - media_player
             - light
@@ -43,32 +43,27 @@ trigger:
   - platform: state
     entity_id: !input time_sensor
 
-variables:
-  time_sensor_entity: !input time_sensor
-  max_time_minutes: !input max_time
-
-condition:
-  - condition: template
-    value_template: >-
-      {% set value = states(time_sensor_entity) | float(0) %}
-      {% set max_limit = max_time_minutes | float(0) / 60 %}
-      {{ value > max_limit }}
-
-  - condition: template
-    value_template: >-
-      {% set last_triggered = state_attr(this.entity_id, 'last_triggered') %}
-      {% if last_triggered is none %}
-        true
-      {% else %}
-        {{ now().date() != last_triggered.date() }}
-      {% endif %}
-
 action:
-  - service: homeassistant.turn_off
-    target:
-      entity_id: !input target_device
-
-  - choose: []
-    default: !input extra_actions
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >-
+              {% set time = states('!input time_sensor') | float(0) %}
+              {% set limit = (!input max_time | float(0)) / 60 %}
+              {{ time > limit }}
+          - condition: template
+            value_template: >-
+              {% set last_triggered = state_attr(this.entity_id, 'last_triggered') %}
+              {% if last_triggered is none %}
+                true
+              {% else %}
+                {{ now().date() != last_triggered.date() }}
+              {% endif %}
+        sequence:
+          - service: homeassistant.turn_off
+            target:
+              entity_id: !input target_device
+          - choose: []
+            default: !input extra_actions
 
 mode: single
