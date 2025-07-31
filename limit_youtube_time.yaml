@@ -26,7 +26,17 @@ blueprint:
       description: Thiết bị sẽ bị tắt nếu vượt ngưỡng thời gian.
       selector:
         entity:
-          domain: switch
+          domain: 
+          - switch
+          - media_player
+          - light
+        multiple: true
+    extra_actions:
+      name: Hành động bổ sung (tùy chọn)
+      description: Các hành động khác sẽ được thực thi sau khi tắt thiết bị.
+      default: []
+      selector:
+        action: {}
 
 trigger:
   - platform: state
@@ -50,5 +60,8 @@ action:
   - service: switch.turn_off
     target:
       entity_id: !input target_device
+      
+  - choose: []
+    default: !input extra_actions
 
 mode: single
