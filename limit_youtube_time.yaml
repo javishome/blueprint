@@ -2,6 +2,7 @@ blueprint:
   name: Tắt thiết bị nếu sensor thời gian vượt ngưỡng
   description: Tự động tắt thiết bị nếu sensor thời gian vượt quá giới hạn định sẵn.
   domain: automation
+
   input:
     time_sensor:
       name: Cảm biến thời gian sử dụng
@@ -40,8 +41,8 @@ trigger:
     entity_id: !input time_sensor
 
 variables:
-  sensor_value: "{{ states(!input time_sensor) | float(0) }}"
-  max_hours: "{{ (float(!input max_time)) / 60 }}"
+  sensor_value: "{{ states(inputs.time_sensor) | float(0) }}"
+  max_hours: "{{ inputs.max_time | float / 60 }}"
   last_triggered: "{{ state_attr(this.entity_id, 'last_triggered') }}"
 
 condition:
@@ -53,6 +54,7 @@ action:
   - service: homeassistant.turn_off
     target:
       entity_id: !input target_device
+
   - choose: []
     default: !input extra_actions
 
