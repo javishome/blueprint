@@ -35,27 +35,49 @@ blueprint:
       default: []
       selector:
         action: {}
-
+        
+    only_once_per_day:
+      name: Chỉ chạy một lần mỗi ngày
+      default: false
+      selector:
+        boolean:
+        
+        
 trigger:
   - platform: state
     entity_id: !input time_sensor
 
 variables:
-  sensor_value: "{{ states(inputs.time_sensor) | float(0) }}"
-  max_hours: "{{ inputs.max_time | float / 60 }}"
-  last_triggered: "{{ state_attr(this.entity_id, 'last_triggered') }}"
+  sensor_entity: !input time_sensor
+  max_minutes: !input max_time
+  run_once: !input only_once_per_day
+  
+  sensor_value: "{{ states(sensor_entity) | float(0) }}"
+  max_hours: "{{ max_minutes | float / 60 }}"
+  last_triggered: "{{ state_attr(this.entity_id, 'last_triggered').day | default(0) }}"
+  today : "{{ now().day }}"
 
-condition:
+
+
+conditions:
   - condition: template
     value_template: >-
-      {{ sensor_value > max_hours and (last_triggered is none or now().date() != last_triggered.date()) }}
+      {{ (sensor_value > max_hours) and (today != last_triggered)  }}
+# condition:
+#   - condition: template
+#     value_template: >-
+#       {{ sensor_value > max_hours }}
 
 action:
   - service: homeassistant.turn_off
     target:
       entity_id: !input target_device
+  - service: system_log.write
+    data:
+      level: warning
+      message: "Giá trị sensor_value: {{ sensor_value }}, max_hours: {{ max_hours }}, today: {{ today }}, last triggered: {{ last_triggered }}"
 
   - choose: []
     default: !input extra_actions
 
-mode: single
+mode: single 
