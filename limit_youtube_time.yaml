@@ -1,0 +1,83 @@
+blueprint:
+  name: Tắt thiết bị nếu sensor thời gian vượt ngưỡng
+  description: Tự động tắt thiết bị nếu sensor thời gian vượt quá giới hạn định sẵn.
+  domain: automation
+
+  input:
+    time_sensor:
+      name: Cảm biến thời gian sử dụng
+      selector:
+        entity:
+          domain: sensor
+
+    max_time:
+      name: Giới hạn thời gian (phút)
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 10000
+          unit_of_measurement: phút
+          mode: box
+
+    target_device:
+      name: Thiết bị cần tắt
+      selector:
+        entity:
+          domain:
+            - media_player
+          multiple: true
+
+    extra_actions:
+      name: Hành động bổ sung (tùy chọn)
+      default: []
+      selector:
+        action: {}
+        
+    # only_once_per_day:
+    #   name: Chỉ chạy một lần mỗi ngày
+    #   default: false
+    #   selector:
+    #     boolean:
+        
+        
+triggers:
+  - platform: state
+    entity_id: !input time_sensor
+  - platform: state
+    entity_id: !input target_device
+    to: playing
+
+variables:
+  sensor_entity: !input time_sensor
+  max_minutes: !input max_time
+  # run_once: !input only_once_per_day
+  
+  sensor_value: "{{ states(sensor_entity) | float(0) }}"
+  max_hours: "{{ max_minutes | float / 60 }}"
+  last_triggered: "{{ state_attr(this.entity_id, 'last_triggered').day | default(0) }}"
+  today : "{{ now().day }}"
+
+
+
+conditions:
+#   - condition: template
+#     value_template: >-
+#       {{ (sensor_value > max_hours) and (today != last_triggered)  }}
+  - condition: template
+    value_template: >-
+      {{ sensor_value > max_hours }}
+
+action:
+  - service: homeassistant.turn_off
+    target:
+      entity_id: !input target_device
+  - service: system_log.write
+    data:
+      level: warning
+      message: "Giá trị sensor_value: {{ sensor_value }}, max_hours: {{ max_hours }}, today: {{ today }}, last triggered: {{ last_triggered }}"
+
+  - choose: []
+    default: !input extra_actions
+
+mode: single 
