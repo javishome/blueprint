@@ -25,9 +25,7 @@ blueprint:
       selector:
         entity:
           domain:
-            - switch
             - media_player
-            - light
           multiple: true
 
     extra_actions:
@@ -36,21 +34,24 @@ blueprint:
       selector:
         action: {}
         
-    only_once_per_day:
-      name: Chỉ chạy một lần mỗi ngày
-      default: false
-      selector:
-        boolean:
+    # only_once_per_day:
+    #   name: Chỉ chạy một lần mỗi ngày
+    #   default: false
+    #   selector:
+    #     boolean:
         
         
-trigger:
+triggers:
   - platform: state
     entity_id: !input time_sensor
+  - platform: state
+    entity_id: !input target_device
+    to: playing
 
 variables:
   sensor_entity: !input time_sensor
   max_minutes: !input max_time
-  run_once: !input only_once_per_day
+  # run_once: !input only_once_per_day
   
   sensor_value: "{{ states(sensor_entity) | float(0) }}"
   max_hours: "{{ max_minutes | float / 60 }}"
@@ -60,13 +61,12 @@ variables:
 
 
 conditions:
-  - condition: template
-    value_template: >-
-      {{ (sensor_value > max_hours) and (today != last_triggered)  }}
-# condition:
 #   - condition: template
 #     value_template: >-
-#       {{ sensor_value > max_hours }}
+#       {{ (sensor_value > max_hours) and (today != last_triggered)  }}
+  - condition: template
+    value_template: >-
+      {{ sensor_value > max_hours }}
 
 action:
   - service: homeassistant.turn_off
