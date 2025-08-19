@@ -1,0 +1,48 @@
+blueprint:
+  name: Lấy key từ MQTT JSON và gửi REST
+  description: >
+    Subscribe tới một MQTT topic, lấy các key trong JSON payload,
+    thêm timestamp, rồi gửi dữ liệu tới REST Command timesheet.
+  domain: automation
+  input:
+    mqtt_topic:
+      name: MQTT Topic
+      description: Topic để subscribe
+      selector:
+        text:
+
+trigger:
+  - platform: mqtt
+    topic: !input mqtt_topic
+
+variables:
+  payload_obj: "{{ trigger.payload | from_json }}"
+  timestamp: "{{ as_timestamp(now()) | int }}"
+  camera_id: "{{ payload_obj.get('cameraId', '') }}"
+  profile_id: "{{ payload_obj.get('profileId', '') }}"
+  name_id: "{{ payload_obj.get('name', '') }}"
+  new_payload: >
+    {{
+      {
+        "person_id": profile_id,
+        "person_name": name_id,
+        "person_type":0,
+        "mask":0,
+        "date_time": timestamp,
+        "time": now().strftime("%d%m%Y%H%M%S"),
+        "msg_id": camera_id ~ "-" ~ timestamp,
+        "image":"",
+        "camera_id": camera_id
+      } | tojson
+    }}
+
+action:
+  - service: system_log.write
+    data:
+      message: "Đóng gói JSON mới: {{ new_payload }}"
+      level: warning
+  - service: rest_command.timesheet_hrm_ai
+    data:
+      payload: "{{ new_payload }}"
+
+mode: single
