@@ -8,6 +8,7 @@ blueprint:
     mqtt_topic:
       name: MQTT Topic
       description: Topic để subscribe
+      default: "aibox/face/#"
       selector:
         text:
 
