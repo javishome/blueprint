@@ -90,7 +90,7 @@ action:
                   brightness_step_pct: 10
           - if:
               - condition: template
-                value_template: "{{ light_2 is defined and light_2 != '' }}"
+                value_template: "{{ light_2 != none }}"
               - condition: state
                 entity_id: !input target_light_2
                 state: "on"
@@ -121,7 +121,7 @@ action:
                   brightness_step_pct: -10
           - if:
               - condition: template
-                value_template: "{{ light_2 is defined and light_2 != '' }}"
+                value_template: "{{ light_2 != none }}"
               - condition: state
                 entity_id: !input target_light_2
                 state: "on"
