@@ -1,0 +1,137 @@
+blueprint:
+  name: Điều khiển độ sáng bằng một cảm biến và giá trị trạng thái v2
+  description: >-
+    Sử dụng một cảm biến duy nhất để tăng hoặc giảm độ sáng của đèn.
+    Bạn có thể chọn giá trị trạng thái nào của cảm biến sẽ kích hoạt hành động tăng, và giá trị nào sẽ kích hoạt hành động giảm.
+
+    LƯU Ý QUAN TRỌNG: KHÔNG chọn cùng một giá trị cho cả hai tùy chọn "Tăng độ sáng" và "Giảm độ sáng", vì điều này sẽ gây ra một vòng lặp tự động hóa không mong muốn.
+  domain: automation
+  source_url: https://community.home-assistant.io/t/control-light-brightness-based-on-sensor-state-v3/12345
+
+  input:
+    # --- ĐẦU VÀO CHO ĐÈN ---
+    target_light_1:
+      name: Đèn chính (Bắt buộc)
+      description: Chọn thực thể đèn đầu tiên để điều khiển.
+      selector:
+        entity:
+          domain: light
+
+    target_light_2:
+      name: Đèn phụ (Tùy chọn)
+      description: Chọn thực thể đèn thứ hai để điều khiển (nếu có).
+      selector:
+        entity:
+          domain: light
+      default: {}
+
+    # --- ĐẦU VÀO CHO CẢM BIẾN VÀ TRẠNG THÁI ---
+    action_sensor: # <<-- THAY ĐỔI: Chỉ còn một cảm biến
+      name: Cảm biến tăng giảm độ sáng
+      description: Chọn cảm biến duy nhất để theo dõi trạng thái.
+      selector:
+        entity:
+          domain: sensor
+
+    increase_value: # <<-- THÊM MỚI: Tùy chọn giá trị để tăng sáng
+      name: Giá trị cảm biến khi TĂNG độ sáng
+      description: Chọn giá trị mà cảm biến sẽ chuyển sang để kích hoạt việc TĂNG độ sáng.
+      selector:
+        select:
+          options:
+            - "scene_1"
+            - "scene_2"
+            - "scene_3"
+            - "scene_4"
+
+    decrease_value: # <<-- THÊM MỚI: Tùy chọn giá trị để giảm sáng
+      name: Giá trị cảm biến khi GIẢM độ sáng
+      description: Chọn giá trị mà cảm biến sẽ chuyển sang để kích hoạt việc GIẢM độ sáng.
+      selector:
+        select:
+          options:
+            - "scene_1"
+            - "scene_2"
+            - "scene_3"
+            - "scene_4"
+
+variables:
+  light_1: !input target_light_1
+  light_2: !input target_light_2
+  increase_scene: !input increase_value
+  decrease_scene: !input decrease_value
+
+trigger:
+  # <<-- THAY ĐỔI LỚN: Trigger giờ đây theo dõi một cảm biến duy nhất
+  # và chỉ kích hoạt khi trạng thái của nó khớp với một trong hai giá trị bạn đã chọn.
+  - platform: state
+    entity_id: !input action_sensor
+    to:
+      - !input increase_value
+      - !input decrease_value
+
+action:
+  - choose:
+      # --- TRƯỜNG HỢP 1: TĂNG ĐỘ SÁNG ---
+      - conditions:
+          # <<-- THAY ĐỔI: Điều kiện giờ đây so sánh trạng thái mới của trigger với giá trị bạn đã chọn
+          - condition: template
+            value_template: "{{ trigger.to_state.state == increase_scene }}"
+        sequence:
+          - if:
+              - condition: state
+                entity_id: !input target_light_1
+                state: "on"
+            then:
+              - service: light.turn_on
+                target:
+                  entity_id: !input target_light_1
+                data:
+                  brightness_step_pct: 10
+          - if:
+              - condition: template
+                value_template: "{{ light_2 is defined and light_2 != '' }}"
+              - condition: state
+                entity_id: !input target_light_2
+                state: "on"
+            then:
+              - service: light.turn_on
+                target:
+                  entity_id: !input target_light_2
+                data:
+                  brightness_step_pct: 10
+
+      # --- TRƯỜNG HỢP 2: GIẢM ĐỘ SÁNG ---
+      - conditions:
+          # <<-- THAY ĐỔI: Điều kiện giờ đây so sánh trạng thái mới của trigger với giá trị bạn đã chọn
+          - condition: template
+            value_template: "{{ trigger.to_state.state == decrease_scene }}"
+        sequence:
+          - if:
+              - condition: state
+                entity_id: !input target_light_1
+                state: "on"
+              - condition: template # Vẫn giữ logic không giảm về 0
+                value_template: "{{ state_attr(light_1, 'brightness') | int(0) > 28 }}"
+            then:
+              - service: light.turn_on
+                target:
+                  entity_id: !input target_light_1
+                data:
+                  brightness_step_pct: -10
+          - if:
+              - condition: template
+                value_template: "{{ light_2 is defined and light_2 != '' }}"
+              - condition: state
+                entity_id: !input target_light_2
+                state: "on"
+              - condition: template # Vẫn giữ logic không giảm về 0
+                value_template: "{{ state_attr(light_2, 'brightness') | int(0) > 28 }}"
+            then:
+              - service: light.turn_on
+                target:
+                  entity_id: !input target_light_2
+                data:
+                  brightness_step_pct: -10
+
+mode: single
