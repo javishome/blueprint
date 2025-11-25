@@ -1,0 +1,93 @@
+blueprint:
+  name: Tự động đóng mở cửa tủ Robot hút bụi
+  description: Tự động mở/đóng cửa tủ robot dựa trên trạng thái hoạt động của robot
+  domain: automation
+  input:
+    robot_status_sensor:
+      name: Cảm biến trạng thái Robot
+      description: Sensor hiển thị trạng thái của robot (docking, charging, cleaning)
+      selector:
+        entity:
+          domain: sensor
+    
+    open_door_switch:
+      name: Switch mở cửa tủ Robot
+      description: Switch điều khiển mở cửa tủ robot
+      selector:
+        entity:
+          domain: switch
+    
+    close_door_switch:
+      name: Switch đóng cửa tủ Robot
+      description: Switch điều khiển đóng cửa tủ robot
+      selector:
+        entity:
+          domain: switch
+    
+    cleaning_delay:
+      name: Thời gian delay đóng cửa khi dọn dẹp
+      description: Thời gian chờ (phút) trước khi đóng cửa sau khi robot bắt đầu dọn dẹp
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 1
+          unit_of_measurement: "phút"
+          mode: slider
+
+mode: queued
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input robot_status_sensor
+    id: status_changed
+
+action:
+  - choose:
+      # Mở cửa khi robot về sạc (docking)
+      - conditions:
+          - condition: trigger
+            id: status_changed
+          - condition: state
+            entity_id: !input robot_status_sensor
+            state: "docking"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input open_door_switch
+
+      # Đóng cửa khi robot bắt đầu sạc (charging)
+      - conditions:
+          - condition: trigger
+            id: status_changed
+          - condition: state
+            entity_id: !input robot_status_sensor
+            state: "charging"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input close_door_switch
+
+      # Mở cửa khi robot bắt đầu dọn dẹp từ trạng thái charging
+      - conditions:
+          - condition: trigger
+            id: status_changed
+          - condition: state
+            entity_id: !input robot_status_sensor
+            state: "cleaning"
+          - condition: state
+            entity_id: !input robot_status_sensor
+            state: "charging"
+            attribute: from
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input open_door_switch
+          # Đợi thời gian đã cấu hình rồi đóng cửa
+          - delay:
+              minutes: !input cleaning_delay
+          - action: switch.turn_on
+            target:
+              entity_id: !input close_door_switch
