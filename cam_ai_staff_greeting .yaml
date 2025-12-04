@@ -1,0 +1,49 @@
+blueprint:
+  name: Hệ thống Chào Nhân viên (MQTT)
+  description: Phát loa chào nhân viên dựa trên sensor bộ nhớ trong Package.
+  domain: automation
+  input:
+    # Đây là cái bạn cần: Bộ chọn Loa (Entity Picker)
+    loa_thong_bao:
+      name: Chọn Loa thông báo
+      description: Chọn thiết bị media_player để phát giọng nói.
+      selector:
+        entity:
+          domain: media_player
+    
+    # Bộ chọn thời gian
+    gio_bat_dau:
+      name: Giờ bắt đầu
+      default: "08:00:00"
+      selector:
+        time: {}
+    
+    gio_ket_thuc:
+      name: Giờ kết thúc
+      default: "18:00:00"
+      selector:
+        time: {}
+
+# Logic Automation
+trigger:
+  - platform: state
+    entity_id: sensor.nguoi_can_chao # Sensor này lấy từ Package ở Bước 1
+    not_to:
+      - "waiting"
+      - "unknown"
+      - "unavailable"
+      - ""
+
+condition:
+  - condition: time
+    after: !input gio_bat_dau
+    before: !input gio_ket_thuc
+
+action:
+  - service: tts.google_translate_say
+    target:
+      entity_id: !input loa_thong_bao # Dùng ID loa được chọn từ giao diện
+    data:
+      message: "Xin chào {{ trigger.to_state.state }}"
+      cache: false
+mode: queued
