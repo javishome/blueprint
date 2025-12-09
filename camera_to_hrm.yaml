@@ -20,7 +20,7 @@ variables:
   payload_obj: "{{ trigger.payload | from_json }}"
   timestamp: "{{ as_timestamp(now()) | int }}"
   camera_id: "{{ payload_obj.get('cameraId', '') }}"
-  profile_id: "{{ payload_obj.get('profileId', '') }}"
+  profile_id: "{{ payload_obj.get('profileUUID', '') }}"
   name_id: "{{ payload_obj.get('name', '') }}"
   new_payload: >
     {{
