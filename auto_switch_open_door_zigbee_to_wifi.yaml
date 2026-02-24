@@ -1,0 +1,67 @@
+## Blueprint: Tự động bật/tắt Automation dựa trên trạng thái kết nối của thiết bị Zigbee. Dùng để chuyển chế độ từ Zigbee sang WiFi khi mất kết nối và ngược lại khi có kết nối trở lại.
+blueprint:
+  name: Bật/Tắt Automation theo trạng thái Zigbee 
+  description: >
+    Tự động quản lý một Automation khác dựa trên trạng thái kết nối của thiết bị Zigbee:
+    
+    1. Khi thiết bị Zigbee MẤT KẾT NỐI (unavailable/unknown) -> BẬT Automation mục tiêu.
+    
+    2. Khi thiết bị Zigbee CÓ KẾT NỐI TRỞ LẠI -> TẮT Automation mục tiêu.
+  domain: automation
+  input:
+    zigbee_monitor_switch:
+      name: Thiết bị Zigbee (Z)
+      description: Thiết bị cần giám sát trạng thái kết nối.
+      selector:
+        entity:
+          domain: switch
+
+    target_automation:
+      name: Automation Mục tiêu (A)
+      description: Automation này sẽ được Bật/Tắt tự động.
+      selector:
+        entity:
+          domain: automation
+
+# Kích hoạt khi trạng thái thay đổi
+trigger:
+  # Trường hợp 1: Mất kết nối
+  - platform: state
+    entity_id: !input zigbee_monitor_switch
+    to: 
+      - "unavailable"
+      - "unknown"
+    id: "lost_connection"
+    for:
+      seconds: 10 # Đợi 10s để xác nhận lỗi thật sự
+
+  # Trường hợp 2: Có kết nối trở lại
+  # Logic: Chuyển từ trạng thái lỗi sang bất kỳ trạng thái nào khác
+  - platform: state
+    entity_id: !input zigbee_monitor_switch
+    from: 
+      - "unavailable"
+      - "unknown"
+    id: "connection_restored"
+
+condition: []
+
+action:
+  - choose:
+      # Nếu mất kết nối -> Bật Automation A
+      - conditions:
+          - condition: trigger
+            id: "lost_connection"
+        sequence:
+          - action: automation.turn_on
+            target:
+              entity_id: !input target_automation
+
+      # Nếu có kết nối lại -> Tắt Automation A
+      - conditions:
+          - condition: trigger
+            id: "connection_restored"
+        sequence:
+          - action: automation.turn_off
+            target:
+              entity_id: !input target_automation
